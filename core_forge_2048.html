@@ -443,7 +443,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 }
 /* ---- 手机竖屏 (≤640px)：棋盘主导 + 标签页收纳 ---- */
 @media (max-width:640px){
-  :root{--cell:min(calc((100vw - 24px)/4), calc((100vh - 330px)/4.6));--gap:4px}
+  :root{--cell:min(calc((100vw - 76px)/4), calc((100vh - 360px)/4.6));--gap:4px}
   body{overflow-y:auto;overflow-x:hidden}
   /* 顶栏极简 */
   #topbar{height:38px;flex:0 0 38px;padding:0 8px}
@@ -454,11 +454,11 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   .tb-item b{font-size:11px}
   .tb-btn{padding:3px 6px;font-size:7px}
   .tb-item:nth-child(3){display:none} /* 隐藏 SEED */
-  /* 舞台单列 */
-  #stage{grid-template-columns:1fr;padding:6px 8px;gap:6px}
-  /* 棋盘主体 */
-  #board-zone{order:1;padding:6px 0 2px;perspective:700px}
-  #board{padding:4px}
+  /* 舞台单列 · 增大页边距 */
+  #stage{grid-template-columns:1fr;padding:16px 18px;gap:12px}
+  /* 棋盘主体 · 下移入拇指热区 */
+  #board-zone{order:1;padding:24px 0 14px;perspective:700px}
+  #board{padding:6px}
   #combo-stamp{font-size:24px;top:10%}
   #tut-toast{font-size:9.5px;padding:7px 10px;max-width:94%;top:1%}
   /* 反应堆 → 紧凑状态条（常驻） */
@@ -1511,7 +1511,11 @@ const Board=(()=>{
     if(hooks.canAct&&!hooks.canAct())return;
     const dataGrid=grid.map(t=>t?{v:t.v,blocker:t.blocker}:null);
     const res=computeMoves(dataGrid,dir);
-    if(!res.moved){nudge(dir);AudioSys.thud();return;}
+    if(!res.moved){
+      /* 死锁安全网：冰封/腐蚀致全盘无可行移动时，触发紧急清除而非仅nudge */
+      if(!anyMovesAvailable(dataGrid)&&hooks.onBoardLock){hooks.onBoardLock();return;}
+      nudge(dir);AudioSys.thud();return;
+    }
     animating=true;
     AudioSys.slide();
     const mergeOps=res.ops.filter(o=>o.type==='merge');
@@ -2159,17 +2163,18 @@ const Run=(()=>{
     if(has('e5'))gambler();
     enemyPhase();
     if(S.state!=='play')return;
-    if(S.g&&S.g.hp<=0){guardianDefeated();return;}
     const dg=[];
     for(let i=0;i<16;i++){const t=Board.tileAt(i);dg.push(t?{v:t.v,blocker:t.blocker}:null);}
-    if(!anyMovesAvailable(dg)){
-      AudioSys.alarm();
-      const n=Board.purgeLowest();
-      log('板结！紧急清除弹射 '+n+' 枚最低阶核心','warn');
-      hurtPlayer(4+2*S.floor,'板结应急清除');
-      if(S.state!=='play')return;
-    }
+    if(!anyMovesAvailable(dg)){handleBoardLock();if(S.state!=='play')return;}
+    if(S.g&&S.g.hp<=0){guardianDefeated();return;}
     updatePlayerUI();
+  }
+  function handleBoardLock(){
+    if(!S||S.state!=='play')return;
+    AudioSys.alarm();
+    const n=Board.purgeLowest();
+    log('板结！紧急清除弹射 '+n+' 枚最低阶核心','warn');
+    hurtPlayer(4+2*S.floor,'板结应急清除');
   }
   function gambler(){
     const roll=S.rng.next();
@@ -2425,7 +2430,7 @@ const Run=(()=>{
   }
 
   function getState(){return S;}
-  return{startRun,getState,onMerge,afterMove,tryPurge,tryOverdrive,reservedSlot,cancelTargeting,
+  return{startRun,getState,onMerge,afterMove,handleBoardLock,tryPurge,tryOverdrive,reservedSlot,cancelTargeting,
     purgeClick,pickRelic,reroll,purgeCost,odCost,has,schoolCount,shieldCap,
     debug:{
       killGuardian(){if(S&&S.g){S.g.hp=0;guardianDefeated();}},
@@ -2662,6 +2667,7 @@ Board.setHooks({
   spawnEight:()=>{const S=Run.getState();return !!S&&S.relics.indexOf('e1')>=0;},
   schrodinger:()=>{const S=Run.getState();return !!S&&S.relics.indexOf('xu1')>=0;},
   noSpawn:()=>{const S=Run.getState();return !!S&&!!S.tutDef&&!!S.tutDef.noSpawn;},
+  onBoardLock:()=>Run.handleBoardLock(),
   rng:{chance:p=>{const S=Run.getState();return S?S.rng.chance(p):Math.random()<p;}},
 });
 EL.boardInner.addEventListener('click',e=>{
