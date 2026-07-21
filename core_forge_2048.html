@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>CORE FORGE // 熔核锻炉 — 2048 × Roguelike</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,10 @@ body{
   background:var(--bg); color:var(--ink); font-family:var(--mono);
   overflow:hidden; user-select:none; -webkit-user-select:none;
   display:flex; flex-direction:column;
+  -webkit-tap-highlight-color:transparent;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
+#board-zone{touch-action:none}
 button{font-family:var(--mono); cursor:pointer; background:none; border:none; color:inherit}
 .hidden{display:none !important}
 .cham{clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
@@ -429,6 +432,75 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   #board-zone{order:1;padding:26px 0}
   #col-right{order:3}
   #log-panel{max-height:180px}
+}
+/* ---- 手机竖屏 (≤640px) ---- */
+@media (max-width:640px){
+  :root{--cell:calc((100vw - 46px)/4);--gap:6px}
+  body{overflow-y:auto;overflow-x:hidden}
+  #topbar{height:40px;flex:0 0 40px;padding:0 10px}
+  #topbar .logo{font-size:15px}
+  #topbar .logo span{display:none}
+  .tb-right{gap:8px}
+  .tb-item{font-size:8px;letter-spacing:.08em}
+  .tb-item b{font-size:12px}
+  .tb-btn{padding:4px 7px;font-size:8px}
+  #stage{grid-template-columns:1fr;padding:6px 8px;gap:6px}
+  #board-zone{order:1;padding:8px 0;perspective:800px}
+  #col-left{order:2;flex-direction:column;gap:6px}
+  #col-left .panel{padding:8px 10px}
+  #col-right{order:3;gap:6px}
+  #guardian-panel{padding:8px 10px}
+  #g-sprite{width:64px;height:64px;margin:0 auto 4px}
+  #g-name{font-size:14px}
+  #g-code{font-size:7px;margin:1px 0 5px}
+  .gbar{height:14px}
+  #intent-box{padding:5px 8px;min-height:36px;margin-top:6px}
+  #intent-main{font-size:10px}
+  #log-panel{max-height:120px;padding:8px 10px}
+  #log li{font-size:9px;padding:3px 6px}
+  #hintbar{display:none}
+  .skill{padding:12px 10px}
+  .skill .nm{font-size:16px}
+  .skill .key{font-size:10px;padding:2px 6px}
+  #buff-row{gap:5px}
+  #relic-list{max-height:100px}
+  .relic-item{font-size:9px;padding:4px 6px}
+  #affinity-row{gap:4px}
+  .aff{font-size:8px}
+  #char-emblem{padding:4px 8px}
+  #char-emblem b{font-size:12px}
+  .ov-frame{padding:18px 14px;width:96vw;max-height:88vh}
+  #start-frame{width:96vw}
+  .start-logo{font-size:34px}
+  .start-sub{font-size:9px;letter-spacing:.18em;margin:6px 0 12px}
+  .start-lore{font-size:10px;margin-bottom:14px}
+  #menu-status{font-size:9px;padding:7px 10px}
+  .big-btn{padding:11px 30px;font-size:15px}
+  .menu-row{gap:8px;margin-top:8px}
+  .menu-btn{padding:10px;font-size:13px}
+  #chars-frame,#meta-frame{width:96vw}
+  .chars-grid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .char-card.big{min-height:0;padding:8px 7px;gap:3px}
+  .char-card.big .cc-name{font-size:16px}
+  .cc-frame{font-size:8px}
+  .cc-start,.cc-mech{font-size:8px}
+  #death-frame{width:96vw}
+  #death-score-row{padding:8px 14px}
+  #death-score-row b{font-size:28px}
+  #death-stats{grid-template-columns:1fr}
+  #death-stats div{font-size:9px;padding:4px 2px}
+  #relic-cards{grid-template-columns:1fr;gap:8px}
+  .rcard{padding:10px 12px}
+  .rcard .rn{font-size:16px}
+  .rcard .rd{font-size:9px}
+  #tut-toast{font-size:9.5px;padding:7px 10px;max-width:94%;top:2%}
+  #combo-stamp{font-size:26px}
+  #banner-main{font-size:32px}
+  #banner-sub{font-size:9px}
+  .upg-row{grid-template-columns:1fr;gap:6px}
+  .upg-tiers{grid-template-columns:repeat(2,1fr)}
+  #heat-btns{gap:4px}
+  .heat-btn{padding:4px 8px;font-size:10px}
 }
 </style>
 </head>
@@ -1286,12 +1358,15 @@ const Board=(()=>{
   let animating=false,pendingDir=-1,uid=0;
   let M={cell:100,gap:11};
   let hooks={onMerge:null,onMoveDone:null,canAct:null};
-  let tiltX=27,tiltY=0,tTiltX=27,tTiltY=0;
+  const baseTilt=()=>window.innerWidth<=640?10:27;
+  let tiltX=baseTilt(),tiltY=0,tTiltX=baseTilt(),tTiltY=0;
 
   function cacheMetrics(){
     const st=getComputedStyle(document.documentElement);
-    M.cell=parseFloat(st.getPropertyValue('--cell'))||100;
     M.gap=parseFloat(st.getPropertyValue('--gap'))||11;
+    /* 从实际渲染宽度反算 cell（兼容移动端 calc() 变量） */
+    const w=EL.boardInner.offsetWidth;
+    M.cell=w>0?(w-3*M.gap)/4:(parseFloat(st.getPropertyValue('--cell'))||100);
   }
   function posOf(ci){const c=ci%4,r=(ci/4)|0;
     return{x:c*(M.cell+M.gap),y:r*(M.cell+M.gap)};}
@@ -1505,7 +1580,7 @@ const Board=(()=>{
     },{passive:true});
     window.addEventListener('mousemove',e=>{
       const nx=e.clientX/window.innerWidth-.5, ny=e.clientY/window.innerHeight-.5;
-      tTiltX=27-ny*4;tTiltY=nx*5;
+      tTiltX=baseTilt()-ny*4;tTiltY=nx*5;
     });
   }
   function stepTilt(dt){
