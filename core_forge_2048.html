@@ -496,11 +496,12 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
     color:var(--dim);font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:.2em;
     transition:color .15s,border-color .15s}
   #m-tabs button.on{border-color:var(--amber);color:var(--amber2)}
-  /* 标签页面板显隐 */
+  /* 标签页面板显隐（切换时入场动效） */
   #col-right{order:4;gap:5px}
-  body[data-mtab="guardian"] #guardian-panel{display:block !important}
-  body[data-mtab="relics"] #relic-panel{display:flex !important}
-  body[data-mtab="log"] #log-panel{display:flex !important}
+  body[data-mtab="guardian"] #guardian-panel{display:block !important;animation:tabPanelIn .28s cubic-bezier(.2,.9,.3,1)}
+  body[data-mtab="relics"] #relic-panel{display:flex !important;animation:tabPanelIn .28s cubic-bezier(.2,.9,.3,1)}
+  body[data-mtab="log"] #log-panel{display:flex !important;animation:tabPanelIn .28s cubic-bezier(.2,.9,.3,1)}
+  @keyframes tabPanelIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
   /* 守卫面板紧凑（sprite+名称同行） */
   #guardian-panel{padding:8px 10px}
   #g-head{display:flex;align-items:center;gap:8px}
