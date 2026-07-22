@@ -121,15 +121,31 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 
 /* ============ 6. RELICS ============ */
 #relic-list{display:flex;flex-wrap:wrap;gap:6px;max-height:208px;overflow-y:auto}
-.ric{width:40px;height:40px;padding:3px;background:#0c1013;border:1px solid var(--line);
+.ric{position:relative;width:36px;height:36px;padding:2px;background:#0c1013;border:1px solid var(--line);
   cursor:pointer;transition:transform .12s;flex-shrink:0}
 .ric:hover{transform:scale(1.15)}
 .ric svg{width:100%;height:100%;display:block}
+.ric-badge{position:absolute;right:1px;bottom:1px;z-index:2;font-size:8px;font-weight:700;line-height:1.5;
+  letter-spacing:0;padding:0 3px;background:rgba(8,10,12,.92);border:1px solid var(--line2);color:var(--amber2)}
+/* 额头遗物横条：默认隐藏，仅手机竖屏显示（见 640px 媒体查询） */
+#relic-strip{display:none}
 #relic-tip{position:fixed;z-index:70;max-width:230px;background:rgba(10,14,18,.97);
   border:1px solid var(--amber);padding:8px 11px;pointer-events:none;
   display:flex;flex-direction:column;gap:4px}
 #relic-tip b{font-family:var(--disp);font-size:13px;letter-spacing:.06em}
 #relic-tip span{font-size:10px;line-height:1.55;color:var(--dim)}
+/* 幽灵棋子背景（菜单期间覆盖棋盘的动态遮罩） */
+#ghost-layer{position:fixed;inset:0;z-index:40;overflow:hidden;background:rgba(9,12,15,.94);
+  opacity:1;transition:opacity .5s ease,visibility 0s 0s}
+#ghost-layer.off{opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s .5s}
+#ghost-layer .gtile{position:absolute;left:0;top:0;will-change:transform;
+  transition:transform .7s cubic-bezier(.3,.8,.4,1)}
+#ghost-layer .gin{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp);font-weight:700;filter:blur(1.6px);opacity:.5;
+  border:1px solid rgba(255,255,255,.09);
+  transition:opacity .45s,transform .45s,background .3s,color .3s}
+#ghost-layer .gtile.born .gin{opacity:0;transform:scale(.4)}
+#ghost-layer .gtile.dying .gin{opacity:0;transform:scale(1.5)}
 #relic-list::-webkit-scrollbar{width:4px}
 #relic-list::-webkit-scrollbar-thumb{background:var(--line2)}
 .relic-item{display:flex;gap:8px;align-items:baseline;border:1px solid var(--line);border-left:3px solid var(--dim);
@@ -151,13 +167,13 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 
 /* ============ 7. GUARDIAN PANEL ============ */
 #guardian-panel{flex:0 0 auto}
-#g-head{display:block}
-#g-id{text-align:center}
-#g-sprite{display:block;width:120px;height:120px;margin:2px auto 8px}
-#g-name{text-align:center;font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:.18em;color:#f2f6f8}
-#g-code{text-align:center;font-size:10px;letter-spacing:.3em;color:var(--dim);margin:2px 0 10px}
-#intent-box{margin-top:10px;border:1px solid var(--line);background:#0c1013;padding:8px 10px;min-height:52px}
-#intent-box .label{font-size:9px;letter-spacing:.28em;color:var(--faint);margin-bottom:5px}
+#g-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+#g-intent{flex:1;min-width:0}
+#g-head{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#g-id{text-align:right}
+#g-sprite{width:44px;height:44px;flex-shrink:0}
+#g-name{font-family:var(--disp);font-weight:700;font-size:14px;letter-spacing:.08em;color:#f2f6f8;white-space:nowrap}
+#g-code{font-size:8px;letter-spacing:.2em;color:var(--dim)}
 #intent-main{font-size:12px;letter-spacing:.06em;color:var(--ink);display:flex;align-items:center;gap:8px}
 #intent-main .tag{font-size:10px;padding:2px 7px;border:1px solid currentColor;letter-spacing:.1em}
 .tag-atk{color:var(--red)} .tag-hz{color:#a4d44f} .tag-chg{color:var(--mag)}
@@ -191,6 +207,55 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 #log li.l-warn{border-left-color:var(--yellow);color:#c9b184}
 #log li.l-sys{border-left-color:var(--cyan);color:#8fb6c2}
 @keyframes logIn{0%{transform:translateX(-8px);opacity:0}100%{transform:translateX(0);opacity:1}}
+
+/* ============ 8.5 MAP 抽屉式分支塔总览 ============ */
+#map-panel{display:flex;flex-direction:column;cursor:pointer}
+#map-tree{flex:1;min-height:0;position:relative;overflow:hidden;max-height:104px;
+  transition:max-height .34s cubic-bezier(.2,.9,.3,1)}
+#map-tree::-webkit-scrollbar{width:4px}
+#map-tree::-webkit-scrollbar-thumb{background:var(--line2)}
+.map-canvas{position:relative;width:100%}
+.map-svg{position:absolute;left:0;top:0;width:100%;height:100%}
+.map-svg .ml{stroke:var(--line);stroke-width:1.5;fill:none}
+.map-svg .ml.on{stroke:var(--amber);stroke-width:2;opacity:.8}
+.map-svg .ml.act{stroke:var(--amber2);stroke-width:2;stroke-dasharray:5 4;opacity:.95;
+  animation:edgeFlow 1s linear infinite}
+@keyframes edgeFlow{to{stroke-dashoffset:-9}}
+.mc{position:absolute;width:26px;height:26px;transform:translate(-50%,-50%);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line2);background:#0e1318;
+  font-family:var(--disp);font-weight:700;font-size:12px;color:var(--dim)}
+.mc i{font-style:normal}
+.mc.done{opacity:.36}
+.mc.fut{opacity:.62}
+.mc.reach{border-color:var(--amber);color:var(--amber2);background:rgba(255,138,42,.1);
+  animation:reachPulse 1.4s ease-in-out infinite}
+.mc.cur{border-color:var(--amber);background:var(--amber);color:#160f04}
+.mc.boss{border-color:var(--mag);color:var(--mag)}
+.mc.boss.cur{background:var(--mag);color:#160f04}
+@keyframes reachPulse{0%,100%{opacity:1}50%{opacity:.45}}
+/* 抽屉：展开态 = 全览（可滚动），略缩地图慢一拍跟随升起 */
+body[data-mapexp="1"] #map-tree{max-height:60vh;overflow-y:auto}
+body[data-mapexp="1"] .map-canvas{animation:mapDrawerIn .42s cubic-bezier(.2,.9,.3,1) .12s both}
+@keyframes mapDrawerIn{from{opacity:.15;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes drawerUp{from{transform:translateY(55%);opacity:.3}to{transform:translateY(0);opacity:1}}
+
+/* ============ 8.6 底部面包屑（路径指示 + 抽屉开合柄） ============ */
+#map-crumb{position:fixed;left:0;right:0;bottom:30px;z-index:36;height:26px;
+  display:flex;align-items:center;gap:6px;overflow-x:auto;overflow-y:hidden;
+  padding:0 10px;background:rgba(12,16,20,.96);border-top:1px solid var(--line2);
+  font-size:10px;letter-spacing:.04em;white-space:nowrap;cursor:pointer}
+#map-crumb.hidden{display:none}
+#map-crumb::-webkit-scrollbar{height:0}
+.crumb-cap{color:var(--faint);font-size:8px;letter-spacing:.15em;flex-shrink:0}
+.crumb-seg{color:var(--dim);flex-shrink:0}
+.crumb-seg b{color:var(--faint);font-family:var(--disp);font-weight:700;margin-right:2px}
+.crumb-seg.cur{color:var(--amber2)}
+.crumb-seg.cur b{color:var(--amber)}
+.crumb-sep{color:var(--faint);flex-shrink:0}
+/* 展开态标题栏加拖拽把手，提示可下滑收起 */
+body[data-mapexp="1"] #map-panel h3::after{content:'';display:block;width:38px;height:3px;
+  margin:5px auto 0;background:var(--line2)}
 
 /* ============ 9. HINTBAR ============ */
 #hintbar{position:relative;z-index:5;flex:0 0 30px;display:flex;align-items:center;justify-content:space-between;
@@ -363,6 +428,11 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   letter-spacing:.14em;color:var(--faint);cursor:pointer;transition:color .15s}
 #btn-skip-tut:hover{color:var(--red)}
 #chars-frame,#meta-frame{width:min(880px,94vw)}
+#meta-frame{display:flex;flex-direction:column;overflow:hidden}
+#meta-scroll{flex:1;overflow-y:auto;min-height:0}
+#meta-bottombar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--line2);margin-top:14px;padding-top:12px}
+#meta-bottom-slag{font-size:10px;letter-spacing:.12em;color:var(--dim)}
 .chars-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 .char-card{--cc:var(--dim);border:1px solid var(--line2);background:#0e1318;padding:10px 9px 8px;
   text-align:left;transition:border-color .15s,transform .12s;position:relative;
@@ -455,7 +525,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 }
 /* ---- 手机竖屏 (≤640px)：棋盘主导 + 标签页收纳 ---- */
 @media (max-width:640px){
-  :root{--cell:min(calc((100vw - 76px)/4), calc((100vh - 360px)/4.6));--gap:4px}
+  :root{--cell:min(calc((100vw - 76px)/4), calc((100vh - 392px)/4.6));--gap:4px}
   body{overflow-y:auto;overflow-x:hidden}
   /* 顶栏极简 */
   #topbar{height:38px;flex:0 0 38px;padding:0 8px}
@@ -468,8 +538,16 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   .tb-item:nth-child(3){display:none} /* 隐藏 SEED */
   /* 舞台单列 · 增大页边距 */
   #stage{grid-template-columns:1fr;padding:16px 18px;gap:12px}
+  /* 额头遗物横条（常驻·顶部） */
+  #relic-strip{display:flex;order:0;align-items:center;gap:5px;overflow-x:auto;
+    padding:3px 2px 6px;border-bottom:1px solid var(--line)}
+  #relic-strip .ric{width:24px;height:24px;padding:1px}
+  #relic-strip .ric:hover{transform:none}
+  #relic-strip .ric-badge{font-size:7px;line-height:1.4;padding:0 2px;right:0;bottom:0}
+  #relic-strip::-webkit-scrollbar{height:3px}
+  #relic-strip::-webkit-scrollbar-thumb{background:var(--line2)}
   /* 棋盘主体 · 下移入拇指热区 */
-  #board-zone{order:1;padding:24px 0 14px;perspective:700px}
+  #board-zone{order:1;padding:10px 0 14px;perspective:700px}
   #board{padding:6px}
   #combo-stamp{font-size:24px;top:10%}
   #tut-toast{font-size:9.5px;padding:7px 10px;max-width:94%;top:1%}
@@ -500,25 +578,25 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   #col-right{order:4;gap:5px}
   body[data-mtab="guardian"] #guardian-panel{display:block !important;animation:tabPanelIn .28s cubic-bezier(.2,.9,.3,1)}
   body[data-mtab="relics"] #relic-panel{display:flex !important;animation:tabPanelIn .28s cubic-bezier(.2,.9,.3,1)}
-  body[data-mtab="log"] #log-panel{display:flex !important;animation:tabPanelIn .28s cubic-bezier(.2,.9,.3,1)}
+  body[data-mtab="map"] #map-panel{display:flex !important;animation:tabPanelIn .28s cubic-bezier(.2,.9,.3,1)}
   @keyframes tabPanelIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-  /* 守卫面板紧凑（sprite+名称同行） */
+  /* 守卫面板紧凑（HP条 + 底行左意图/右sprite+名称） */
   #guardian-panel{padding:8px 10px}
-  #g-head{display:flex;align-items:center;gap:8px}
-  #g-id{text-align:left;flex:1;min-width:0}
-  #g-sprite{width:30px;height:30px;margin:0;flex-shrink:0}
-  #g-name{font-size:12px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #g-bottom{gap:8px;margin-top:6px}
+  #g-sprite{width:30px;height:30px}
+  #g-name{font-size:11px}
   #g-code{display:none}
-  .gbar{height:12px;margin-top:6px}
-  #intent-box{padding:4px 8px;min-height:0;margin-top:6px}
+  .gbar{height:12px}
   #intent-main{font-size:9px}
+  #intent-pips{margin-top:4px}
   #intent-pips i{width:12px;height:3px}
   #charge-txt{font-size:8px}
   #reso-box{font-size:9px;padding:4px 8px}
   /* 遗物面板 */
   #relic-panel{padding:8px 10px}
   #relic-panel h3{margin-bottom:6px}
-  #relic-list{max-height:none}
+  #relic-list{max-height:55px}
+  .ric{width:32px;height:32px;padding:2px}
   .relic-item{font-size:9px;padding:4px 6px}
   #affinity-row{gap:4px;margin-top:6px}
   .aff{font-size:8px}
@@ -557,6 +635,33 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   .upg-tiers{grid-template-columns:repeat(2,1fr)}
   #heat-btns{gap:4px}
   .heat-btn{padding:4px 8px;font-size:10px}
+  /* 路径选择指示牌 */
+  #path-sign{position:absolute;left:0;right:0;top:2px;z-index:7;padding:0 4px;
+    animation:tabPanelIn .35s cubic-bezier(.2,.9,.3,1)}
+  #path-sign.shake{animation:psShake .3s}
+  .ps-title{text-align:center;font-family:var(--disp);font-weight:700;font-size:14px;
+    letter-spacing:.2em;color:var(--amber2);margin-bottom:6px}
+  .ps-title em{font-style:normal;font-size:8px;color:var(--faint);letter-spacing:.25em;margin-left:6px}
+  .ps-row{display:flex;align-items:stretch;gap:8px}
+  .ps-opt{flex:1;border:1px solid var(--line2);background:rgba(16,21,26,.92);padding:8px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;transition:border-color .15s,opacity .15s}
+  .ps-opt .ps-arrow{font-size:16px;color:var(--amber2)}
+  .ps-opt .ps-name{font-family:var(--disp);font-weight:700;font-size:13px;color:#eef4f7;letter-spacing:.06em}
+  .ps-opt .ps-hint{font-size:8px;color:var(--dim);letter-spacing:.05em}
+  .ps-opt.restricted{opacity:.35;border-style:dashed}
+  .ps-opt.restricted .ps-hint{color:var(--red)}
+  .ps-vs{align-self:center;font-family:var(--disp);font-weight:700;font-size:11px;color:var(--faint)}
+  .ps-tip{text-align:center;font-size:8px;color:var(--faint);letter-spacing:.08em;margin-top:6px}
+  @keyframes psShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  /* 地图抽屉（移动端）：截断态齐平选项卡；展开态为底部抽屉向上遮盖，不挤压原有 UI */
+  #map-panel{padding:8px 10px}
+  #map-tree{max-height:96px}
+  #map-crumb{bottom:0}
+  body[data-mapexp="1"] #map-panel{
+    position:fixed;left:0;right:0;bottom:26px;top:9vh;z-index:35;margin:0;
+    border:1px solid var(--amber);border-bottom:none;padding:10px 12px;
+    animation:drawerUp .34s cubic-bezier(.2,.9,.3,1)}
+  body[data-mapexp="1"] #map-tree{max-height:none;flex:1;overflow-y:auto}
 }
 
 /* ============ 14. SPLASH 开屏 ============ */
@@ -618,6 +723,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 <div id="hurt-flash"></div>
 <div id="menu-toast" class="hidden"></div>
 <div id="relic-tip" class="hidden"></div>
+<div id="ghost-layer"></div>
 
 <div id="splash">
   <div id="splash-scan"></div>
@@ -639,6 +745,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 </header>
 
 <main id="stage">
+  <div id="relic-strip"></div>
   <aside id="col-left">
     <section class="panel" id="reactor-panel">
       <h3>反应堆 <em>REACTOR</em></h3>
@@ -671,6 +778,15 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 
   <div id="board-zone">
     <div id="combo-stamp"></div>
+    <div id="path-sign" class="hidden">
+      <div class="ps-title">选择路径 <em>CHOOSE PATH</em></div>
+      <div class="ps-row">
+        <div class="ps-opt" id="ps-left"><span class="ps-arrow">←</span><span class="ps-name">--</span><span class="ps-hint">--</span></div>
+        <div class="ps-vs">VS</div>
+        <div class="ps-opt" id="ps-right"><span class="ps-name">--</span><span class="ps-arrow">→</span><span class="ps-hint">--</span></div>
+      </div>
+      <div class="ps-tip" id="ps-tip"></div>
+    </div>
     <div id="tut-toast" class="hidden"><span id="tut-text"></span><span id="tut-dots"></span></div>
     <div id="board-tilt">
       <div id="board">
@@ -685,29 +801,31 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   <nav id="m-tabs">
     <button data-tab="guardian" class="on">守卫</button>
     <button data-tab="relics">遗物</button>
-    <button data-tab="log">日志</button>
+    <button data-tab="map">地图</button>
   </nav>
 
   <aside id="col-right">
     <section class="panel" id="guardian-panel">
       <h3>守卫 <em>GUARDIAN</em></h3>
-      <div id="g-head">
-        <canvas id="g-sprite" width="240" height="240"></canvas>
-        <div id="g-id"><div id="g-name">----</div><div id="g-code">STANDBY</div></div>
-      </div>
       <div class="gbar" id="g-bar"><div class="ghost" id="g-ghost"></div><div class="fill" id="g-fill"></div>
         <div class="shov" id="g-shov"></div><div class="txt"><span>结构强度</span><i id="g-txt">--/--</i></div></div>
-      <div id="intent-box"><div class="label">意图预报 INTENT</div>
-        <div id="intent-main"><span style="color:var(--faint)">// 等待下潜</span></div>
-        <div id="intent-pips"></div>
-        <div id="charge-wrap" class="hidden"><div id="charge-bar"><div id="charge-fill"></div></div>
-          <div id="charge-txt"></div></div>
-        <div id="reso-box" class="hidden"><span>谐振频率</span><b id="reso-val">--</b></div>
+      <div id="g-bottom">
+        <div id="g-intent">
+          <div id="intent-main"><span style="color:var(--faint)">// 等待下潜</span></div>
+          <div id="intent-pips"></div>
+        </div>
+        <div id="g-head">
+          <canvas id="g-sprite" width="240" height="240"></canvas>
+          <div id="g-id"><div id="g-name">----</div><div id="g-code">STANDBY</div></div>
+        </div>
       </div>
+      <div id="charge-wrap" class="hidden"><div id="charge-bar"><div id="charge-fill"></div></div>
+        <div id="charge-txt"></div></div>
+      <div id="reso-box" class="hidden"><span>谐振频率</span><b id="reso-val">--</b></div>
     </section>
-    <section class="panel" id="log-panel">
-      <h3>日志 <em>LOG</em></h3>
-      <ul id="log"></ul>
+    <section class="panel" id="map-panel">
+      <h3>地图 <em>MAP</em></h3>
+      <div id="map-tree"></div>
     </section>
   </aside>
 </main>
@@ -716,6 +834,8 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   <span><b>方向键/WASD</b> 移动锻压 · <b>1</b> 清除 · <b>2</b> 超频 · <b>3-5</b> 预留 · <b>M</b> 静音 · 触屏可滑动</span>
   <span>CORE FORGE v1.1 // 2048×ROGUELIKE</span>
 </footer>
+
+<nav id="map-crumb" class="hidden"></nav>
 
 <canvas id="fx-screen"></canvas>
 
@@ -745,7 +865,8 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
       <button class="menu-btn cham-s" id="btn-meta">炉体升级</button>
     </div>
     <button id="btn-skip-tut" class="hidden">跳过教学 →</button>
-    <div class="start-seed">种子 <input id="seed-input" maxlength="9" placeholder="随机"></div>
+    <div class="start-seed">种子 <input id="seed-input" maxlength="9" placeholder="随机">
+      <button class="tb-btn" id="btn-axis">选路轴: 左右</button></div>
   </div>
 </div>
 
@@ -763,13 +884,18 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 
 <div id="screen-meta" class="overlay hidden">
   <div class="ov-frame cham" id="meta-frame">
-    <div class="ov-title">炉体升级 <em>UPGRADES</em></div>
-    <div class="ov-sub">炉渣 <b id="meta-slag">0</b> · 跨局永久强化 · 死亡结算产出</div>
-    <div id="upg-tree"></div>
-    <div id="heat-box"></div>
-    <div class="ov-foot">
+    <div id="meta-scroll">
+      <div class="ov-title">炉体升级 <em>UPGRADES</em></div>
+      <div class="ov-sub">炉渣 <b id="meta-slag">0</b> · 跨局永久强化 · 死亡结算产出</div>
+      <div id="upg-tree"></div>
+      <div id="heat-box"></div>
+      <div class="ov-foot">
+        <button class="tb-btn warn" id="btn-save-reset">清空存档</button>
+      </div>
+    </div>
+    <div id="meta-bottombar">
       <button class="tb-btn" id="btn-meta-back">← 返回主菜单</button>
-      <button class="tb-btn warn" id="btn-save-reset">清空存档</button>
+      <span id="meta-bottom-slag"></span>
     </div>
   </div>
 </div>
@@ -1024,6 +1150,7 @@ const SAVE=(()=>{
     heat:0,heatUnlocked:false,
     unlocked:{chi:true,pan:true,ning:false,rui:false,xu:false},
     tutorial:{completed:[],skipped:false},
+    pathAxis:'lr',
     bestFloor:0,totalRuns:0,totalKills:0});
   let d=null;
   function load(){
@@ -1035,6 +1162,7 @@ const SAVE=(()=>{
       for(const k in b.unlocked)if(!(k in d.unlocked))d.unlocked[k]=b.unlocked[k];
       if(!d.tutorial)d.tutorial={completed:[],skipped:false};
       if(!Array.isArray(d.tutorial.completed))d.tutorial.completed=[];
+      if(!d.pathAxis)d.pathAxis='lr';
     }catch(e){d=def();}
   }
   function persist(){try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}}
@@ -1144,7 +1272,7 @@ const EL={
   skPurge:$('sk-purge'),skOd:$('sk-od'),purgeCost:$('purge-cost'),odCost:$('od-cost'),
   emName:$('em-name'),emProg:$('em-prog'),
   tutToast:$('tut-toast'),tutText:$('tut-text'),tutDots:$('tut-dots'),
-  buffRow:$('buff-row'),relicList:$('relic-list'),relicCount:$('relic-count'),affRow:$('affinity-row'),
+  buffRow:$('buff-row'),relicList:$('relic-list'),relicStrip:$('relic-strip'),relicCount:$('relic-count'),affRow:$('affinity-row'),
   gPanel:$('guardian-panel'),gName:$('g-name'),gCode:$('g-code'),
   gFill:$('g-fill'),gGhost:$('g-ghost'),gShov:$('g-shov'),gTxt:$('g-txt'),
   intentMain:$('intent-main'),intentPips:$('intent-pips'),
@@ -1154,7 +1282,7 @@ const EL={
   underglow:$('board-underglow'),combo:$('combo-stamp'),hurtFlash:$('hurt-flash'),
   banner:$('banner'),bannerMain:$('banner-main'),bannerSub:$('banner-sub'),
   modalRelic:$('modal-relic'),relicCards:$('relic-cards'),btnReroll:$('btn-reroll'),
-  screenStart:$('screen-start'),btnStart:$('btn-start'),seedInput:$('seed-input'),
+  screenStart:$('screen-start'),btnStart:$('btn-start'),seedInput:$('seed-input'),btnAxis:$('btn-axis'),
   screenDeath:$('screen-death'),deathTitle:$('death-title'),deathSub:$('death-sub'),
   dScore:$('d-score'),deathStats:$('death-stats'),deathRelics:$('death-relics'),deathSeed:$('death-seed'),
   btnRestart:$('btn-restart'),btnSameSeed:$('btn-sameseed'),
@@ -1162,6 +1290,7 @@ const EL={
   menuStatus:$('menu-status'),btnChars:$('btn-chars'),btnMeta:$('btn-meta'),
   screenChars:$('screen-chars'),charsGrid:$('chars-grid'),btnCharsBack:$('btn-chars-back'),
   screenMeta:$('screen-meta'),metaSlag:$('meta-slag'),upgTree:$('upg-tree'),heatBox:$('heat-box'),
+  metaBottomSlag:$('meta-bottom-slag'),
   btnMetaBack:$('btn-meta-back'),btnSaveReset:$('btn-save-reset'),
   dSlag:$('d-slag'),dSlagTotal:$('d-slag-total'),dUnlock:$('d-unlock'),
 };
@@ -1401,6 +1530,120 @@ const Ambient=(()=>{
     cx.globalAlpha=1;
   }
   return{resize,init,step};
+})();
+
+/* ================= 幽灵棋子背景（菜单动态遮罩） =================
+   虚化的2048棋子从屏幕边缘出现, 每tick移动一格, 同值自动合并,
+   达到随机数值时消亡 */
+const Ghost=(()=>{
+  const GCELL=88,TICK=850;
+  const GCOL={2:'#2b3238',4:'#353f47',8:'#4d4430',16:'#5f4d2a',32:'#7a5a22',64:'#96651c',
+    128:'#b3731a',256:'#cf8418',512:'#e8961c',1024:'#f7ab2e',2048:'#ffc94d'};
+  const GTXT={2:'#9fb0ba',4:'#c2d0d8',8:'#ecd9a4',16:'#ffe9ae',32:'#ffdf9a',64:'#ffd68a',
+    128:'#241505',256:'#281404',512:'#2c1503',1024:'#301804',2048:'#331a02'};
+  let layer=null,tiles=[],grid=[],gcols=0,grows=0;
+  let running=false,timer=null,nextId=0;
+  function gmetrics(){
+    gcols=Math.max(3,Math.ceil(window.innerWidth/GCELL));
+    grows=Math.max(3,Math.ceil(window.innerHeight/GCELL));
+    grid=new Array(gcols*grows).fill(null);
+  }
+  function pos(r,c){return{x:c*GCELL,y:r*GCELL};}
+  function paint(t){
+    t.gin.style.background=GCOL[t.v]||'#ffc94d';
+    t.gin.style.color=GTXT[t.v]||'#331a02';
+    t.gin.textContent=t.v;
+    t.gin.style.fontSize=(GCELL*0.36)+'px';
+  }
+  function makeTile(r,c,v,dr,dc){
+    const el=document.createElement('div');
+    el.className='gtile born';
+    el.style.width=GCELL+'px';el.style.height=GCELL+'px';
+    const gin=document.createElement('div');
+    gin.className='gin';
+    el.appendChild(gin);
+    layer.appendChild(el);
+    const t={id:++nextId,v,r,c,dr,dc,el,gin,
+      deathV:[16,32,32,64,64,64,128][(Math.random()*7)|0]};
+    paint(t);
+    const p=pos(r,c);
+    el.style.transform='translate3d('+p.x+'px,'+p.y+'px,0)';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove('born')));
+    return t;
+  }
+  function spawnEdge(){
+    const edges=[];
+    for(let r=0;r<grows;r++)for(let c=0;c<gcols;c++){
+      if((r===0||r===grows-1||c===0||c===gcols-1)&&!grid[r*gcols+c])edges.push(r*gcols+c);
+    }
+    if(!edges.length)return;
+    const i=edges[(Math.random()*edges.length)|0];
+    const r=(i/gcols)|0,c=i%gcols;
+    let dr=0,dc=0;
+    if(r===0)dr=1;else if(r===grows-1)dr=-1;
+    if(c===0)dc=1;else if(c===gcols-1)dc=-1;
+    if(dr!==0&&dc!==0){if(Math.random()<.5)dc=0;else dr=0;}
+    if(dr===0&&dc===0)dc=Math.random()<.5?1:-1;
+    const t=makeTile(r,c,Math.random()<.7?2:4,dr,dc);
+    tiles.push(t);grid[i]=t;
+  }
+  function kill(t){
+    if(grid[t.r*gcols+t.c]===t)grid[t.r*gcols+t.c]=null;
+    tiles=tiles.filter(x=>x!==t);
+    t.el.classList.add('dying');
+    setTimeout(()=>t.el.remove(),500);
+  }
+  function turn(t){
+    const dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(d=>!(d[0]===t.dr&&d[1]===t.dc));
+    const d=dirs[(Math.random()*dirs.length)|0];
+    t.dr=d[0];t.dc=d[1];
+  }
+  function tick(){
+    const order=tiles.slice().sort(()=>Math.random()-.5);
+    for(const t of order){
+      if(tiles.indexOf(t)<0)continue;
+      const nr=t.r+t.dr,nc=t.c+t.dc;
+      if(nr<0||nr>=grows||nc<0||nc>=gcols){turn(t);continue;}
+      const ti=nr*gcols+nc,other=grid[ti];
+      if(other&&other!==t&&other.v===t.v){
+        /* 合并 */
+        grid[t.r*gcols+t.c]=null;
+        kill(other);
+        grid[ti]=t;t.r=nr;t.c=nc;t.v*=2;
+        paint(t);
+        const p=pos(nr,nc);
+        t.el.style.transform='translate3d('+p.x+'px,'+p.y+'px,0)';
+        t.gin.style.transition='none';t.gin.style.transform='scale(1.28)';
+        requestAnimationFrame(()=>{t.gin.style.transition='';t.gin.style.transform='';});
+        if(t.v>=t.deathV){const dt=t;setTimeout(()=>kill(dt),220);}
+      }else if(!other){
+        grid[t.r*gcols+t.c]=null;
+        grid[ti]=t;t.r=nr;t.c=nc;
+        const p=pos(nr,nc);
+        t.el.style.transform='translate3d('+p.x+'px,'+p.y+'px,0)';
+      }else{turn(t);}
+    }
+    if(tiles.length<7&&Math.random()<.85)spawnEdge();
+  }
+  function start(){
+    if(running)return;
+    layer=$('ghost-layer');
+    layer.classList.remove('off');
+    gmetrics();
+    running=true;
+    for(let i=0;i<6;i++)spawnEdge();
+    timer=setInterval(tick,TICK);
+  }
+  function stop(){
+    if(!running)return;
+    running=false;
+    if(timer){clearInterval(timer);timer=null;}
+    for(const t of tiles)t.el.remove();
+    tiles=[];grid=[];
+    if(layer)layer.classList.add('off');
+  }
+  window.addEventListener('resize',()=>{if(running)gmetrics();});
+  return{start,stop};
 })();
 
 /* ================= 守卫精灵（程序化动画） ================= */
@@ -1697,6 +1940,7 @@ const Board=(()=>{
     window.addEventListener('keydown',e=>{
       if(e.key in KEYDIR){
         e.preventDefault();
+        if(window.__pathShrink&&Run.handlePathKey){Run.handlePathKey(e.key);return;}
         if(e.repeat&&animating)return;
         doMove(KEYDIR[e.key]);
       }
@@ -1711,6 +1955,7 @@ const Board=(()=>{
       const dx=t.clientX-tx,dy=t.clientY-ty;
       if(Date.now()-tt>600)return;
       if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;
+      if(window.__pathShrink&&Run.handlePathSwipe){Run.handlePathSwipe(dx,dy);return;}
       if(Math.abs(dx)>Math.abs(dy)){kickTilt(dx>0?4:-4,0);doMove(dx>0?1:0);}
       else{kickTilt(0,dy>0?3:-3);doMove(dy>0?3:2);}
     },{passive:true});
@@ -1719,6 +1964,7 @@ const Board=(()=>{
       tTiltX=baseTilt()-ny*4;tTiltY=nx*5;
     });
   }
+  let curScale=1,curTY=0;
   function stepTilt(dt){
     tiltX+=(tTiltX-tiltX)*Math.min(1,dt*6);
     tiltY+=(tTiltY-tiltY)*Math.min(1,dt*6);
@@ -1726,7 +1972,11 @@ const Board=(()=>{
     impY*=Math.pow(0.02,dt);
     if(Math.abs(impX)<0.05)impX=0;
     if(Math.abs(impY)<0.05)impY=0;
-    EL.boardTilt.style.transform='rotateX('+(tiltX+impY).toFixed(2)+'deg) rotateY('+(tiltY+impX).toFixed(2)+'deg)';
+    const st=window.__pathShrink?0.62:1;
+    const ty=window.__pathShrink?55:0;
+    curScale+=(st-curScale)*Math.min(1,dt*7);
+    curTY+=(ty-curTY)*Math.min(1,dt*7);
+    EL.boardTilt.style.transform='translateY('+curTY.toFixed(1)+'px) scale('+curScale.toFixed(3)+') rotateX('+(tiltX+impY).toFixed(2)+'deg) rotateY('+(tiltY+impX).toFixed(2)+'deg)';
   }
 
   /* ---- 主循环 ---- */
@@ -1746,10 +1996,14 @@ const Board=(()=>{
   function setHooks(h){Object.assign(hooks,h);}
   function isAnimating(){return animating;}
   function setPendingBlocked(){pendingDir=-1;}
+  function canMove(dir){
+    const dataGrid=grid.map(t=>t?{v:t.v,blocker:t.blocker}:null);
+    return computeMoves(dataGrid,dir).moved;
+  }
 
   return{init,doMove,isAnimating,setHooks,addTile,removeTile,clearBoard,relayout,
     setHazard,clearHazard,emptyCells,spawnRandom,purgeLowest,tileAt,forEachTile,count,
-    cellRectOnScreen,setPendingBlocked,nudge,refreshTile,pop,kickTilt};
+    cellRectOnScreen,setPendingBlocked,nudge,refreshTile,pop,kickTilt,canMove};
 })();
 
 /* ================= 全局尺寸/窗口 ================= */
@@ -1767,11 +2021,17 @@ const Run=(()=>{
       floor:1,hp:ch.hp,maxHp:ch.hp,shield:0,energy:0,energyCap:ch.en,
       relics:[ch.startRelic],g:null,od:0,odFloor:false,firstMergeFloor:true,sealUsed:false,
       targeting:null,lastType:null,wonOnce:false,
+      mapFloors:[],chosenKey:null,chosenSide:null,pendingFork:null,
       tutDef:null,tutState:{hintIdx:0},
       cs:{emberAcc:0,emberBonus:0,floorMerges:0,spentAcc:0,loadStacks:0,
         arcArmed:false,panSeal:false,healFloor:0},
       st:{moves:0,merges:0,dmgDealt:0,dmgTaken:0,maxTile:0,maxHit:0,kills:0,
         floorsCleared:0,crits:0,hazardsCleared:0,energySpent:0,start:Date.now()}};
+    /* 预生成分支爬塔地图（独立种子 RNG，不干扰局内随机） */
+    S.towerRng=makeRng(((seed%99991)*131+7)|0);
+    S.tower=genTower(S.towerRng);
+    S.pos={f:1,i:0};
+    S.tower[0][0].visited=true;
   }
   const has=id=>S&&S.relics.indexOf(id)>=0;
   const schoolCount=sc=>S?S.relics.filter(id=>RELICS.find(r=>r.id===id).school===sc).length:0;
@@ -2028,10 +2288,15 @@ const Run=(()=>{
     let key;
     if(S.tutDef&&S.tutDef.guardian){
       key=S.tutDef.guardian;
+    }else if(heat()>=10&&f===5){
+      key='core';
+    }else if(S.tower&&S.tower[f-1]&&S.tower[f-1][S.pos.i]){
+      key=S.tower[f-1][S.pos.i].key;
     }else{
-      key=(heat()>=10&&f===5)?'core':guardianKeyFor(f,S.seed,S.lastType);
+      key=guardianKeyFor(f,S.seed,S.lastType);
     }
     S.lastType=key;
+    S.chosenKey=null;S.chosenSide=null;
     const def=GUARDIANS[key];
     const hp=Math.round(guardianMaxHp(f,def.hpMult)*(1+0.1*heat()));
     const spd=(S.tutDef&&S.tutDef.guardianSpeed)?S.tutDef.guardianSpeed:def.speed;
@@ -2045,6 +2310,8 @@ const Run=(()=>{
     log('深度 '+pad2(f)+' 守卫：<b>'+def.name+'</b> — '+def.desc,'sys');
     if(f===1)log('提示：合并核心即可造成伤害；击败守卫后选择遗物','sys');
     showBanner('DEPTH '+pad2(f),def.name+' // '+def.code);
+    renderMap();
+    renderCrumb();
   }
   function guardianDefeated(){
     const g=S.g;
@@ -2082,7 +2349,7 @@ const Run=(()=>{
       S.wonOnce=true;
       showBanner('核 心 夺 取','SECTOR CLEARED // 无尽下潜已解锁');
     }
-    setTimeout(()=>{offerRelics(nextFloor);},750);
+    setTimeout(()=>{offerRelics(enterPathMode);},750);
   }
   function nextFloor(){
     if(S.state!=='play')return;
@@ -2093,6 +2360,217 @@ const Run=(()=>{
     playTransition('scan',()=>{spawnGuardian();});
     updatePlayerUI();
     checkTutorialHints('floor');
+  }
+
+  /* ---------- 路径选择系统 ---------- */
+  let pathMode=null;
+  function isBossFloor(f){return f===10||(f>10&&(f-10)%5===0);}
+  /* 预生成分支塔：列轨 DAG，最宽 3 路，二元分叉，boss 层收束为单核 */
+  function towerPool(f){
+    return Object.keys(GUARDIANS).filter(k=>{
+      const g=GUARDIANS[k];return !g.boss&&k!=='dummy'&&g.minFloor<=f+1;});
+  }
+  function pickCols(rng,P){
+    const sets=[[1],[0,1],[1,2],[0,2],[0,1,2]];
+    const valid=sets.filter(C=>{
+      if(!C.every(c=>P.some(p=>Math.abs(c-p)<=1)))return false;   /* 连通 */
+      if(!P.every(p=>C.some(c=>Math.abs(c-p)<=1)))return false;   /* 覆盖 */
+      if(!P.every(p=>C.filter(c=>Math.abs(c-p)<=1).length<=2))return false; /* 每节点≤2子 */
+      return true;
+    });
+    const pool=valid.length?valid:[[1]];
+    return pool[(rng.next()*pool.length)|0].slice();
+  }
+  function pickGuardian(rng,f,parentKeys,used){
+    const pool=towerPool(f);
+    let c=pool.filter(k=>used.indexOf(k)<0&&parentKeys.indexOf(k)<0); /* 非父非兄 */
+    if(!c.length)c=pool.filter(k=>used.indexOf(k)<0);                 /* 退而求其次：保证兄弟互异 */
+    if(!c.length)c=pool;
+    return c[(rng.next()*c.length)|0];
+  }
+  function buildFloor(rng,f,prev){
+    const mk=(col,key)=>({col,col2:col,key,ch:[],pa:[],visited:false});
+    let cur;
+    if(isBossFloor(f)){cur=[mk(1,'core')];}
+    else{
+      const cols=pickCols(rng,prev.map(n=>n.col));
+      const parentKeys=prev.map(n=>n.key);
+      const used=[];
+      cur=cols.map(c=>{
+        const k=pickGuardian(rng,f,parentKeys,used);
+        used.push(k);                          /* 同层兄弟互异 */
+        return mk(c,k);
+      });
+    }
+    prev.forEach((p,pi)=>cur.forEach((c,ci)=>{
+      if(Math.abs(p.col-c.col)<=1){p.ch.push(ci);c.pa.push(pi);}
+    }));
+    return cur;
+  }
+  function genTower(rng){
+    const t=[[{col:1,col2:1,key:'puppet',ch:[],pa:[],visited:false}]];
+    for(let f=2;f<=40;f++)t.push(buildFloor(rng,f,t[f-2]));
+    return t;
+  }
+  function extendTower(){
+    const start=S.tower.length+1;
+    for(let f=start;f<start+15;f++)S.tower.push(buildFloor(S.towerRng,f,S.tower[f-2]));
+  }
+  function curTowerNode(){return S.tower&&S.tower[S.pos.f-1]?S.tower[S.pos.f-1][S.pos.i]:null;}
+  function pathAxis(){return SAVE.get().pathAxis||'lr';}
+  function enterPathMode(){
+    if(S.state!=='play')return;
+    if(S.tutDef||!S.tower){nextFloor();return;}
+    let node=curTowerNode();
+    if(!node.ch.length)extendTower();
+    node=curTowerNode();
+    const ch=node.ch;
+    if(ch.length<=1){                                  /* 单子/收束：强制前进，无抉择 */
+      if(ch.length===1){S.pos={f:S.pos.f+1,i:ch[0]};S.tower[S.pos.f-1][ch[0]].visited=true;}
+      nextFloor();
+      return;
+    }
+    const opts=ch.slice().sort((a,b)=>S.tower[S.pos.f][a].col-S.tower[S.pos.f][b].col);
+    pathMode={left:{idx:opts[0],key:S.tower[S.pos.f][opts[0]].key},
+              right:{idx:opts[1],key:S.tower[S.pos.f][opts[1]].key}};
+    showPathUI();
+  }
+  function showPathUI(){
+    window.__pathShrink=true;
+    renderMap();                          /* 地图同步高亮待选分叉 */
+    const sign=$('path-sign');
+    sign.classList.remove('hidden','shake');
+    updatePathAvailability();
+    $('ps-tip').textContent=pathAxis()==='lr'
+      ?'左滑← / 右滑→ 选路 · 上/下滑可调整棋盘'
+      :'上滑↑ / 下滑↓ 选路 · 左/右滑可调整棋盘';
+  }
+  function pathDirs(){
+    return pathAxis()==='lr'?{left:0,right:1,alt:[2,3]}:{left:2,right:3,alt:[0,1]};
+  }
+  /* 选路可用性 = 该方向能否滑动（与滑动限制同源，稳定无随机） */
+  function updatePathAvailability(){
+    if(!pathMode)return;
+    const gl=GUARDIANS[pathMode.left.key],gr=GUARDIANS[pathMode.right.key];
+    const pl=$('ps-left'),pr=$('ps-right');
+    pl.querySelector('.ps-name').textContent=gl.name;
+    pr.querySelector('.ps-name').textContent=gr.name;
+    const d=pathDirs();
+    const lOk=Board.canMove(d.left),rOk=Board.canMove(d.right);
+    pl.classList.toggle('restricted',!lOk);
+    pr.classList.toggle('restricted',!rOk);
+    pl.querySelector('.ps-hint').textContent=lOk?'可通行':'无法滑动';
+    pr.querySelector('.ps-hint').textContent=rOk?'可通行':'无法滑动';
+  }
+  function hidePathUI(){
+    window.__pathShrink=false;
+    $('path-sign').classList.add('hidden');
+  }
+  function shakePathSign(){
+    const s=$('path-sign');
+    s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake');
+    AudioSys.thud();
+  }
+  function choosePath(side,boardDir){
+    if(!pathMode)return;
+    if(!Board.canMove(boardDir)){shakePathSign();return;}  /* 该方向无法滑动=锁定 */
+    const opt=pathMode[side];
+    S.pos={f:S.pos.f+1,i:opt.idx};
+    S.tower[S.pos.f-1][opt.idx].visited=true;
+    S.chosenKey=opt.key;S.chosenSide=side;
+    pathMode=null;                        /* 先锁定，防止滑动期间重复选路 */
+    Board.doMove(boardDir);               /* 棋子实际滑向所选方向 */
+    setTimeout(()=>{hidePathUI();nextFloor();},240);  /* 留出滑动动画再下潜 */
+  }
+  function rearrangeBoard(boardDir){
+    if(!pathMode)return;
+    if(!Board.canMove(boardDir)){shakePathSign();return;}
+    Board.doMove(boardDir);               /* 非选路轴：仅调整棋盘 */
+    setTimeout(updatePathAvailability,160); /* 滑动落定后刷新各路径可用性 */
+  }
+  function handlePathSwipe(dx,dy){
+    const horiz=Math.abs(dx)>Math.abs(dy);
+    if(pathAxis()==='lr'){
+      if(horiz){choosePath(dx>0?'right':'left',dx>0?1:0);}else{rearrangeBoard(dy>0?3:2);}
+    }else{
+      if(!horiz){choosePath(dy>0?'right':'left',dy>0?3:2);}else{rearrangeBoard(dx>0?1:0);}
+    }
+  }
+  function handlePathKey(key){
+    if(pathAxis()==='lr'){
+      if(key==='ArrowLeft'||key==='a'||key==='A')choosePath('left',0);
+      else if(key==='ArrowRight'||key==='d'||key==='D')choosePath('right',1);
+      else if(key==='ArrowUp'||key==='w'||key==='W')rearrangeBoard(2);
+      else if(key==='ArrowDown'||key==='s'||key==='S')rearrangeBoard(3);
+    }else{
+      if(key==='ArrowUp'||key==='w'||key==='W')choosePath('left',2);
+      else if(key==='ArrowDown'||key==='s'||key==='S')choosePath('right',3);
+      else if(key==='ArrowLeft'||key==='a'||key==='A')rearrangeBoard(0);
+      else if(key==='ArrowRight'||key==='d'||key==='D')rearrangeBoard(1);
+    }
+  }
+  /* ---- 地图渲染：分支塔（SVG 连线 + 列轨节点）---- */
+  function renderMap(){
+    const tree=$('map-tree');
+    if(!S||!S.tower){tree.innerHTML='<div class="empty-note">// 暂无路径记录</div>';return;}
+    const rh=44,floors=S.tower,n=floors.length,H=n*rh;
+    const colX=[60,150,240];                       /* 逻辑宽 300 下三列中心 */
+    const yOf=f=>(n-f)*rh+rh/2;                    /* F1 在底部，越深越靠上 */
+    const curF=S.pos.f,curI=S.pos.i;
+    const reach={};
+    const cn=floors[curF-1]&&floors[curF-1][curI];
+    if(cn)(cn.ch||[]).forEach(ci=>{reach[(curF+1)+':'+ci]=true;});
+    /* 连线 */
+    let lines='';
+    for(let f=1;f<n;f++){
+      floors[f-1].forEach((p,pi)=>{
+        (p.ch||[]).forEach(ci=>{
+          const c=floors[f][ci];
+          let cls='ml';
+          if(p.visited&&c.visited)cls+=' on';       /* 已走过的路径 */
+          if(f===curF&&pi===curI)cls+=' act';       /* 当前节点出发的可达边 */
+          lines+='<line x1="'+colX[p.col]+'" y1="'+yOf(f)+'" x2="'+colX[c.col]+'" y2="'+yOf(f+1)+'" class="'+cls+'"/>';
+        });
+      });
+    }
+    /* 节点 */
+    let chips='';
+    for(let f=1;f<=n;f++){
+      floors[f-1].forEach((nd,i)=>{
+        const g=GUARDIANS[nd.key];
+        let st='fut';
+        if(f===curF&&i===curI)st='cur';
+        else if(reach[f+':'+i])st='reach';
+        else if(nd.visited)st='done';
+        const boss=nd.key==='core'?' boss':'';
+        chips+='<div class="mc '+st+boss+'" style="left:'+(colX[nd.col]/3)+'%;top:'+yOf(f)+'px">'+
+          '<i>'+(g?g.name.charAt(0):'?')+'</i></div>';
+      });
+    }
+    tree.innerHTML='<div class="map-canvas" style="height:'+H+'px">'+
+      '<svg class="map-svg" viewBox="0 0 300 '+H+'" preserveAspectRatio="none">'+lines+'</svg>'+chips+'</div>';
+    requestAnimationFrame(()=>{
+      const vis=tree.clientHeight||0;
+      if(vis>0)tree.scrollTop=Math.max(0,yOf(curF)-vis+rh*0.6);  /* 当前层置于可视区下部 */
+    });
+  }
+  /* 底部面包屑：已走路径 F1›F2›…›当前（点击开合地图抽屉） */
+  function renderCrumb(){
+    const crumb=$('map-crumb');
+    if(!crumb)return;
+    if(!S||!S.tower){crumb.classList.add('hidden');return;}
+    crumb.classList.remove('hidden');
+    let html='<span class="crumb-cap">路径</span>';
+    for(let f=1;f<=S.pos.f;f++){
+      const row=S.tower[f-1];
+      const nd=row.find(n=>n.visited);
+      if(!nd)continue;
+      const g=GUARDIANS[nd.key];
+      if(f>1)html+='<span class="crumb-sep">›</span>';
+      html+='<span class="crumb-seg'+(f===S.pos.f?' cur':'')+'"><b>F'+pad2(f)+'</b>'+(g?g.name.charAt(0):'?')+'</span>';
+    }
+    crumb.innerHTML=html;
+    crumb.scrollLeft=crumb.scrollWidth;  /* 滚到当前层 */
   }
 
   /* ---------- 敌人阶段 ---------- */
@@ -2440,6 +2918,7 @@ const Run=(()=>{
     setTimeout(()=>showDeath(false),650);
   }
   function startRun(seed,charId,tutorialId){
+    Ghost.stop();
     newRun(seed,charId);
     modalOpen=false;
     Board.clearBoard();
@@ -2486,9 +2965,12 @@ const Run=(()=>{
     log('锻炉点火。炉主 <b>'+S.char.name+' · '+S.char.title+'</b> —— 种子 '+seed+'，下潜开始。','sys');
     if(heat()>0)log('炉温 '+heat+' 级修正生效中','warn');
     if(has('xu3')){
-      let lk=S.lastType;const seq=[];
-      for(let f=2;f<=5;f++){const k=guardianKeyFor(f,S.seed,lk);seq.push(GUARDIANS[k].name);lk=k;}
-      log('观测者：F2–F5 守卫序列 — <b>'+seq.join(' → ')+'</b>','sys');
+      const seq=[];
+      for(let f=2;f<=5;f++){
+        const fr=S.tower[f-1];
+        seq.push(fr.map(nd=>GUARDIANS[nd.key].name).join('/'));
+      }
+      log('观测者：F2–F5 守卫 — <b>'+seq.join(' → ')+'</b>','sys');
     }
     playEntrance();
   }
@@ -2521,6 +3003,7 @@ const Run=(()=>{
 
   function getState(){return S;}
   return{startRun,getState,onMerge,afterMove,handleBoardLock,tryPurge,tryOverdrive,reservedSlot,cancelTargeting,
+    handlePathSwipe,handlePathKey,renderMap,
     purgeClick,pickRelic,reroll,purgeCost,odCost,has,schoolCount,shieldCap,
     debug:{
       killGuardian(){if(S&&S.g){S.g.hp=0;guardianDefeated();}},
@@ -2528,10 +3011,23 @@ const Run=(()=>{
       hurt(n){hurtPlayer(n,'调试');},
       setFloor(n){S.floor=n;},
       offers(){return offerList.map(r=>r.id);},
+      passPath(){
+        if(!pathMode)return;
+        const d=pathDirs();
+        if(Board.canMove(d.left)){choosePath('left',d.left);return;}
+        if(Board.canMove(d.right)){choosePath('right',d.right);return;}
+        /* 调试强制前进（棋盘无可行滑动时直接落到左分支） */
+        const opt=pathMode.left;
+        S.pos={f:S.pos.f+1,i:opt.idx};
+        S.tower[S.pos.f-1][opt.idx].visited=true;
+        pathMode=null;hidePathUI();nextFloor();
+      },
+      pathOpts(){return pathMode?{left:{key:pathMode.left.key},right:{key:pathMode.right.key}}:null;},
     }};
 })();
 /* ================= UI 渲染 ================= */
 function log(html,type){
+  if(!EL.log)return;
   const li=document.createElement('li');
   if(type)li.className='l-'+type;
   li.innerHTML=html;
@@ -2564,6 +3060,7 @@ function updatePlayerUI(){
   else if(S.charId==='pan')prog='本层回复 +'+S.cs.healFloor;
   EL.emProg.textContent=prog;
   updateSkillUI();
+  updateRelicBadges();
 }
 function updateSkillUI(){
   const S=Run.getState();if(!S)return;
@@ -2749,23 +3246,34 @@ function attachRelicTip(el){
   el.addEventListener('touchend',hideRelicTip);
   el.addEventListener('touchmove',hideRelicTip);
 }
+function makeRelicIcon(id){
+  const r=RELICS.find(x=>x.id===id);
+  const b=document.createElement('button');
+  b.className='ric s-'+r.school;
+  b.innerHTML=relicIconSVG(r);
+  b.dataset.name=r.name;
+  b.dataset.desc=r.desc;
+  b.dataset.school=r.school;
+  b.dataset.rid=id;
+  if(['chi0','chi2','rui0','pan0'].indexOf(id)>=0){
+    const badge=document.createElement('span');
+    badge.className='ric-badge';
+    b.appendChild(badge);
+  }
+  attachRelicTip(b);
+  return b;
+}
 function updateRelicUI(){
   const S=Run.getState();if(!S)return;
   EL.relicCount.textContent=S.relics.length;
   EL.relicList.innerHTML='';
+  EL.relicStrip.innerHTML='';
   if(!S.relics.length){
     EL.relicList.innerHTML='<div class="empty-note">// 击败守卫后获取遗物</div>';
   }
   for(const id of S.relics){
-    const r=RELICS.find(x=>x.id===id);
-    const b=document.createElement('button');
-    b.className='ric s-'+r.school;
-    b.innerHTML=relicIconSVG(r);
-    b.dataset.name=r.name;
-    b.dataset.desc=r.desc;
-    b.dataset.school=r.school;
-    attachRelicTip(b);
-    EL.relicList.appendChild(b);
+    EL.relicList.appendChild(makeRelicIcon(id));
+    EL.relicStrip.appendChild(makeRelicIcon(id));
   }
   EL.affRow.innerHTML='';
   for(const sc of Object.keys(SCHOOLS)){
@@ -2776,6 +3284,20 @@ function updateRelicUI(){
     d.title=SCHOOLS[sc].aff;
     EL.affRow.appendChild(d);
   }
+}
+function updateRelicBadges(){
+  const S=Run.getState();if(!S)return;
+  document.querySelectorAll('.ric[data-rid]').forEach(el=>{
+    const badge=el.querySelector('.ric-badge');
+    if(!badge)return;
+    const rid=el.dataset.rid;let txt='';
+    if(rid==='chi0')txt=S.cs.emberAcc+'/30'+(S.cs.emberBonus>0?' ◆'+S.cs.emberBonus:'');
+    else if(rid==='chi2')txt='暴×'+Math.max(0,3-S.cs.floorMerges);
+    else if(rid==='rui0')txt=S.cs.arcArmed?'×1.8':'';
+    else if(rid==='pan0')txt='+'+S.cs.healFloor;
+    badge.textContent=txt;
+    badge.style.display=txt?'block':'none';
+  });
 }
 function renderOfferCards(list){
   EL.relicCards.innerHTML='';
@@ -2795,7 +3317,7 @@ function renderOfferCards(list){
   });
 }
 function resetUIForRun(){
-  EL.log.innerHTML='';
+  if(EL.log)EL.log.innerHTML='';
   EL.buffRow.innerHTML='';
   EL.chargeWrap.classList.add('hidden');
   updateGuardianUI();
@@ -2904,13 +3426,53 @@ function showMenuToast(text){
 }
 /* 移动端标签页 */
 document.body.dataset.mtab='guardian';
+document.body.dataset.mapexp='0';
+function setMapExp(open){document.body.dataset.mapexp=open?'1':'0';Run.renderMap();}
 document.querySelectorAll('#m-tabs button').forEach(b=>{
   b.addEventListener('click',()=>{
+    const wasMap=document.body.dataset.mtab==='map';
     document.body.dataset.mtab=b.dataset.tab;
     document.querySelectorAll('#m-tabs button').forEach(x=>x.classList.toggle('on',x===b));
+    if(b.dataset.tab==='map'){
+      if(wasMap){setMapExp(document.body.dataset.mapexp!=='1');}  /* 已在地图：再点切换抽屉 */
+      else{setMapExp(false);}                                     /* 切入地图：截断预览态 */
+    }
     AudioSys.unlock();AudioSys.ui();
   });
 });
+/* 地图抽屉：标题栏点击切换（桌面亦可用）；树区点击仅展开，避免展开态误触收起 */
+$('map-panel').querySelector('h3').addEventListener('click',e=>{
+  e.stopPropagation();
+  if($('map-panel').offsetParent!==null)setMapExp(document.body.dataset.mapexp!=='1');
+});
+$('map-tree').addEventListener('click',()=>{
+  if($('map-panel').offsetParent!==null&&document.body.dataset.mapexp!=='1')setMapExp(true);
+});
+/* 面包屑：点击开合地图抽屉（收起 / 展开并切到地图标签） */
+$('map-crumb').addEventListener('click',()=>{
+  const S=Run.getState();
+  if(!S||!S.tower)return;
+  if(document.body.dataset.mapexp==='1'){setMapExp(false);return;}
+  document.body.dataset.mtab='map';
+  document.querySelectorAll('#m-tabs button').forEach(x=>x.classList.toggle('on',x.dataset.tab==='map'));
+  setMapExp(true);
+});
+/* 触屏：在地图标题栏（把手）向下滑动收起抽屉 */
+(function(){
+  let sy=0,sx=0,st=0,active=false;
+  const h=$('map-panel').querySelector('h3');
+  h.addEventListener('touchstart',e=>{
+    if(document.body.dataset.mapexp!=='1')return;
+    const t=e.changedTouches[0];sy=t.clientY;sx=t.clientX;st=Date.now();active=true;
+  },{passive:true});
+  h.addEventListener('touchend',e=>{
+    if(!active)return;active=false;
+    if(document.body.dataset.mapexp!=='1')return;
+    const t=e.changedTouches[0];
+    const dy=t.clientY-sy,dx=t.clientX-sx;
+    if(dy>40&&Math.abs(dy)>Math.abs(dx)*1.3&&Date.now()-st<700)setMapExp(false);
+  },{passive:true});
+})();
 function updateMenuStatus(){
   const sv=SAVE.get();
   const ch=CHARACTERS[selectedChar];
@@ -2927,6 +3489,7 @@ function updateMenuStatus(){
   EL.btnSkipTut.classList.toggle('hidden',tutDone);
   EL.btnChars.classList.toggle('locked',!tutDone);
   EL.btnMeta.classList.toggle('locked',!tutDone);
+  EL.btnAxis.textContent='选路轴: '+(sv.pathAxis==='lr'?'左右':'上下');
 }
 function buildCharsGrid(){
   const sv=SAVE.get();
@@ -2953,6 +3516,7 @@ function buildCharsGrid(){
 function renderMeta(){
   const sv=SAVE.get();
   EL.metaSlag.textContent=sv.slag;
+  EL.metaBottomSlag.textContent='持有炉渣 '+sv.slag;
   EL.upgTree.innerHTML='';
   for(const key of Object.keys(UPGRADES)){
     const u=UPGRADES[key];const tier=sv.upg[key];
@@ -3018,6 +3582,13 @@ EL.btnSkipTut.addEventListener('click',()=>{
     AudioSys.ui();
     updateMenuStatus();
   }
+});
+EL.btnAxis.addEventListener('click',()=>{
+  const sv=SAVE.get();
+  sv.pathAxis=sv.pathAxis==='lr'?'ud':'lr';
+  SAVE.save();
+  EL.btnAxis.textContent='选路轴: '+(sv.pathAxis==='lr'?'左右':'上下');
+  AudioSys.unlock();AudioSys.ui();
 });
 EL.btnMute.addEventListener('click',()=>{
   AudioSys.unlock();
@@ -3141,19 +3712,59 @@ window.CF={
   giveSlag:n=>{SAVE.get().slag+=n;SAVE.save();},
   meta:()=>SAVE.get(),
   buy:k=>metaBuy(k),
+  passPath:()=>Run.debug.passPath(),
+  pathKey:k=>Run.handlePathKey(k),
+  pathOpts:()=>Run.debug.pathOpts(),
   startTutorial:n=>{playTransition('shutter',()=>{EL.screenStart.classList.add('hidden');Run.startRun(1,'chi',n);});},
 };
 FXS.resize();Ambient.resize();Ambient.init();
 Board.init();
 updateMenuStatus();
-/* 开屏动画完成后淡出 */
-setTimeout(()=>{
+/* 开屏动画（游戏内返回主菜单时跳过） */
+(function(){
+  let skip=false;
+  try{skip=sessionStorage.getItem('cfSkipSplash')==='1';sessionStorage.removeItem('cfSkipSplash');}catch(e){}
   const sp=$('splash');
-  sp.classList.add('done');
-  setTimeout(()=>sp.remove(),600);
-},2100);
-/* 开始屏后的装饰棋盘 */
-[[0,2],[3,4],[5,8],[6,2],[9,16],[10,2],[12,4],[15,32]].forEach(p=>Board.addTile(p[0],p[1],{silent:true}));
+  if(skip){sp.remove();}
+  else{
+    setTimeout(()=>{
+      sp.classList.add('done');
+      setTimeout(()=>sp.remove(),600);
+    },2100);
+  }
+})();
+/* 菜单期间启动幽灵棋子背景（取代静态装饰棋盘） */
+Ghost.start();
+
+/* ===== Android 返回键上下文导航 ===== */
+function handleBackButton(){
+  /* 遗物选择模态：忽略（必须选择） */
+  if(modalOpen)return;
+  /* 角色档案 / 炉体升级屏 → 主菜单 */
+  if(!$('screen-chars').classList.contains('hidden')||!$('screen-meta').classList.contains('hidden')){
+    showScreen('screen-start');updateMenuStatus();AudioSys.ui();Ghost.start();return;
+  }
+  /* 死亡结算 → 主菜单 */
+  if(!$('screen-death').classList.contains('hidden')){
+    $('screen-death').classList.add('hidden');
+    showScreen('screen-start');updateMenuStatus();Ghost.start();return;
+  }
+  /* 游戏内 → 确认返回主菜单（跳过开屏） */
+  if($('screen-start').classList.contains('hidden')){
+    if(confirm('返回主菜单？（本次下潜将中止）')){
+      try{sessionStorage.setItem('cfSkipSplash','1');}catch(e){}
+      location.reload();
+    }
+    return;
+  }
+  /* 主菜单 → 退出 APP */
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
+    window.Capacitor.Plugins.App.exitApp();
+  }
+}
+if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
+  window.Capacitor.Plugins.App.addListener('backButton',()=>handleBackButton());
+}
 </script>
 </body>
 </html>
