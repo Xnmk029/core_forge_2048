@@ -151,6 +151,8 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 
 /* ============ 7. GUARDIAN PANEL ============ */
 #guardian-panel{flex:0 0 auto}
+#g-head{display:block}
+#g-id{text-align:center}
 #g-sprite{display:block;width:120px;height:120px;margin:2px auto 8px}
 #g-name{text-align:center;font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:.18em;color:#f2f6f8}
 #g-code{text-align:center;font-size:10px;letter-spacing:.3em;color:var(--dim);margin:2px 0 10px}
@@ -471,13 +473,13 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   #board{padding:6px}
   #combo-stamp{font-size:24px;top:10%}
   #tut-toast{font-size:9.5px;padding:7px 10px;max-width:94%;top:1%}
-  /* 反应堆 → 紧凑状态条（常驻） */
+  /* 反应堆 → 紧凑状态条（常驻·纵向堆叠防溢出） */
   #col-left{order:2;gap:5px}
   #col-left .panel,#col-right .panel{display:none !important}
-  #col-left #reactor-panel{display:grid !important;grid-template-columns:1.5fr 1fr 1fr;gap:5px;padding:6px 8px}
+  #col-left #reactor-panel{display:flex !important;flex-direction:column;gap:4px;padding:8px 10px}
   #reactor-panel h3,#char-emblem{display:none}
-  #hp-bar,#sh-bar,#en-bar{height:18px;margin:0}
-  .bar .txt{font-size:8px;padding:0 5px}
+  #hp-bar,#sh-bar,#en-bar{height:15px;margin:0}
+  .bar .txt{font-size:8px;padding:0 6px}
   .bar .txt i{font-size:8px}
   /* 技能 → 紧凑行（常驻） */
   #col-left #skill-panel{display:block !important;padding:6px 8px}
@@ -499,14 +501,16 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   body[data-mtab="guardian"] #guardian-panel{display:block !important}
   body[data-mtab="relics"] #relic-panel{display:flex !important}
   body[data-mtab="log"] #log-panel{display:flex !important}
-  /* 守卫面板紧凑 */
+  /* 守卫面板紧凑（sprite+名称同行） */
   #guardian-panel{padding:8px 10px}
-  #g-sprite{width:52px;height:52px;margin:0 auto 2px}
-  #g-name{font-size:13px}
-  #g-code{font-size:7px;margin:0 0 4px}
-  .gbar{height:16px}
-  #intent-box{padding:5px 8px;min-height:30px;margin-top:5px}
-  #intent-main{font-size:10px}
+  #g-head{display:flex;align-items:center;gap:8px}
+  #g-id{text-align:left;flex:1;min-width:0}
+  #g-sprite{width:30px;height:30px;margin:0;flex-shrink:0}
+  #g-name{font-size:12px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #g-code{display:none}
+  .gbar{height:12px;margin-top:6px}
+  #intent-box{padding:4px 8px;min-height:0;margin-top:6px}
+  #intent-main{font-size:9px}
   #intent-pips i{width:12px;height:3px}
   #charge-txt{font-size:8px}
   #reso-box{font-size:9px;padding:4px 8px}
@@ -686,9 +690,10 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   <aside id="col-right">
     <section class="panel" id="guardian-panel">
       <h3>守卫 <em>GUARDIAN</em></h3>
-      <canvas id="g-sprite" width="240" height="240"></canvas>
-      <div id="g-name">----</div>
-      <div id="g-code">STANDBY</div>
+      <div id="g-head">
+        <canvas id="g-sprite" width="240" height="240"></canvas>
+        <div id="g-id"><div id="g-name">----</div><div id="g-code">STANDBY</div></div>
+      </div>
       <div class="gbar" id="g-bar"><div class="ghost" id="g-ghost"></div><div class="fill" id="g-fill"></div>
         <div class="shov" id="g-shov"></div><div class="txt"><span>结构强度</span><i id="g-txt">--/--</i></div></div>
       <div id="intent-box"><div class="label">意图预报 INTENT</div>
@@ -2704,11 +2709,15 @@ function relicIconSVG(r){
   const col=SCHOOLS[r.school].color;
   let px='';
   for(let y=0;y<8;y++)for(let x=0;x<8;x++){
-    if(pat[y][x]==='#')px+='<rect x="'+(x*3+2)+'" y="'+(y*3+2)+'" width="3" height="3"/>';
+    if(pat[y][x]==='#')px+='<rect x="'+(x*3+2.2)+'" y="'+(y*3+2.2)+'" width="2.6" height="2.6"/>';
   }
+  /* 透明底 · 流派色像素 · 光晕沿异形轮廓扩散 */
   return '<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">'+
-    '<rect x="1" y="1" width="26" height="26" fill="#dfe6ea" stroke="'+col+'" stroke-width="2"/>'+
-    '<g fill="#0a0c0e">'+px+'</g></svg>';
+    '<defs><filter id="rg" x="-60%" y="-60%" width="220%" height="220%">'+
+    '<feGaussianBlur in="SourceGraphic" stdDeviation="1.15" result="b"/>'+
+    '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>'+
+    '</filter></defs>'+
+    '<g fill="'+col+'" filter="url(#rg)">'+px+'</g></svg>';
 }
 let relicTipTimer=null;
 function showRelicTip(el,x,y){
