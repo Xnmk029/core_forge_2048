@@ -553,6 +553,58 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   #heat-btns{gap:4px}
   .heat-btn{padding:4px 8px;font-size:10px}
 }
+
+/* ============ 14. SPLASH 开屏 ============ */
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  transition:opacity .5s ease,visibility .5s}
+#splash.done{opacity:0;visibility:hidden}
+#splash-title{font-family:var(--disp);font-weight:700;font-size:56px;letter-spacing:.08em;
+  display:flex;color:#eef4f7}
+#splash-title b{color:var(--amber)}
+#splash-title span,#splash-title b{display:inline-block;opacity:0;transform:translateY(26px);
+  animation:splashChar .55s cubic-bezier(.2,1.1,.3,1) forwards}
+#splash-title :nth-child(1){animation-delay:.05s}
+#splash-title :nth-child(2){animation-delay:.11s}
+#splash-title :nth-child(3){animation-delay:.17s}
+#splash-title :nth-child(4){animation-delay:.23s}
+#splash-title :nth-child(5){animation-delay:.33s}
+#splash-title :nth-child(6){animation-delay:.39s}
+#splash-title :nth-child(7){animation-delay:.45s}
+#splash-title :nth-child(8){animation-delay:.51s}
+#splash-title :nth-child(9){animation-delay:.57s}
+@keyframes splashChar{to{opacity:1;transform:translateY(0)}}
+#splash-sub{font-size:11px;letter-spacing:.42em;color:var(--dim);opacity:0;
+  animation:splashFade .6s ease .75s forwards}
+@keyframes splashFade{to{opacity:1}}
+#splash-bar{width:190px;height:2px;background:var(--line);overflow:hidden;opacity:0;
+  animation:splashFade .4s ease .9s forwards}
+#splash-bar i{display:block;height:100%;width:0;background:var(--amber);
+  animation:splashLoad .8s cubic-bezier(.3,0,.4,1) 1s forwards}
+@keyframes splashLoad{to{width:100%}}
+#splash-scan{position:absolute;left:0;right:0;height:90px;top:-90px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(255,138,42,.07),transparent);
+  animation:splashScan 1.5s linear .2s forwards}
+@keyframes splashScan{to{transform:translateY(calc(100vh + 180px))}}
+
+/* ============ 15. SVG 转场 ============ */
+#transition{position:fixed;inset:0;z-index:90;pointer-events:none}
+#transition svg{width:100%;height:100%;display:block}
+#transition .sh{fill:#0d1114;transform-origin:top;
+  animation:trShutter .72s cubic-bezier(.65,0,.35,1) both}
+@keyframes trShutter{0%{transform:scaleY(0)}42%{transform:scaleY(1)}58%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+#transition .chv{fill:#0d1114;
+  animation:trChevron .72s cubic-bezier(.65,0,.35,1) both}
+@keyframes trChevron{0%{transform:translateX(-115%)}42%{transform:translateX(0)}58%{transform:translateX(0)}100%{transform:translateX(115%)}}
+#transition .scn{fill:rgba(255,138,42,.16);
+  animation:trScan .72s cubic-bezier(.5,0,.5,1) both}
+@keyframes trScan{0%{transform:translateY(-30%)}50%{transform:translateY(42%)}100%{transform:translateY(115%)}}
+
+/* ============ 16. 开局入场动效 ============ */
+.anim-in-top{animation:inTop .55s cubic-bezier(.2,.9,.3,1) both}
+.anim-in-bottom{animation:inBottom .55s cubic-bezier(.2,.9,.3,1) both}
+@keyframes inTop{from{opacity:0;transform:translateY(-26px)}to{opacity:1;transform:translateY(0)}}
+@keyframes inBottom{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -561,6 +613,14 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 <div id="hurt-flash"></div>
 <div id="menu-toast" class="hidden"></div>
 <div id="relic-tip" class="hidden"></div>
+
+<div id="splash">
+  <div id="splash-scan"></div>
+  <div id="splash-title"><span>C</span><span>O</span><span>R</span><span>E</span><b>F</b><b>O</b><b>R</b><b>G</b><b>E</b></div>
+  <div id="splash-sub">熔 核 锻 炉 // 2048 × ROGUELIKE</div>
+  <div id="splash-bar"><i></i></div>
+</div>
+<div id="transition" class="hidden"></div>
 
 <header id="topbar">
   <div class="logo">CORE<b>FORGE</b><span>// 熔核锻炉</span></div>
@@ -1419,6 +1479,12 @@ const Board=(()=>{
   let hooks={onMerge:null,onMoveDone:null,canAct:null};
   const baseTilt=()=>window.innerWidth<=640?10:27;
   let tiltX=baseTilt(),tiltY=0,tTiltX=baseTilt(),tTiltY=0;
+  /* 触控惯性倾斜冲量（小幅度，快速衰减） */
+  let impX=0,impY=0;
+  function kickTilt(kx,ky){
+    impX=clamp(impX+kx,-5,5);
+    impY=clamp(impY+ky,-4,4);
+  }
 
   function cacheMetrics(){
     const st=getComputedStyle(document.documentElement);
@@ -1639,7 +1705,8 @@ const Board=(()=>{
       const dx=t.clientX-tx,dy=t.clientY-ty;
       if(Date.now()-tt>600)return;
       if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;
-      if(Math.abs(dx)>Math.abs(dy))doMove(dx>0?1:0);else doMove(dy>0?3:2);
+      if(Math.abs(dx)>Math.abs(dy)){kickTilt(dx>0?4:-4,0);doMove(dx>0?1:0);}
+      else{kickTilt(0,dy>0?3:-3);doMove(dy>0?3:2);}
     },{passive:true});
     window.addEventListener('mousemove',e=>{
       const nx=e.clientX/window.innerWidth-.5, ny=e.clientY/window.innerHeight-.5;
@@ -1649,7 +1716,11 @@ const Board=(()=>{
   function stepTilt(dt){
     tiltX+=(tTiltX-tiltX)*Math.min(1,dt*6);
     tiltY+=(tTiltY-tiltY)*Math.min(1,dt*6);
-    EL.boardTilt.style.transform='rotateX('+tiltX.toFixed(2)+'deg) rotateY('+tiltY.toFixed(2)+'deg)';
+    impX*=Math.pow(0.02,dt); /* 惯性衰减 */
+    impY*=Math.pow(0.02,dt);
+    if(Math.abs(impX)<0.05)impX=0;
+    if(Math.abs(impY)<0.05)impY=0;
+    EL.boardTilt.style.transform='rotateX('+(tiltX+impY).toFixed(2)+'deg) rotateY('+(tiltY+impX).toFixed(2)+'deg)';
   }
 
   /* ---- 主循环 ---- */
@@ -1672,7 +1743,7 @@ const Board=(()=>{
 
   return{init,doMove,isAnimating,setHooks,addTile,removeTile,clearBoard,relayout,
     setHazard,clearHazard,emptyCells,spawnRandom,purgeLowest,tileAt,forEachTile,count,
-    cellRectOnScreen,setPendingBlocked,nudge,refreshTile,pop};
+    cellRectOnScreen,setPendingBlocked,nudge,refreshTile,pop,kickTilt};
 })();
 
 /* ================= 全局尺寸/窗口 ================= */
@@ -2013,7 +2084,7 @@ const Run=(()=>{
     S.cs.floorMerges=0;S.cs.emberAcc=0;S.cs.emberBonus=0;S.cs.panSeal=false;
     S.cs.healFloor=0;S.cs.spentAcc=0;S.cs.loadStacks=0;S.cs.arcArmed=false;
     if(has('a4')){gainShield(25);log('防爆隔舱：<b>+25 护盾</b>','good');}
-    spawnGuardian();
+    playTransition('scan',()=>{spawnGuardian();});
     updatePlayerUI();
     checkTutorialHints('floor');
   }
@@ -2387,6 +2458,7 @@ const Run=(()=>{
       updatePlayerUI();updateRelicUI();updateBuffs();updateSkillUI();
       log('教学 · 第 '+tutDef.id+' 关：<b>'+tutDef.name+'</b> — '+tutDef.sub,'sys');
       checkTutorialHints('start');
+      playEntrance();
       return;
     }
     /* 局外升级注入 */
@@ -2412,6 +2484,7 @@ const Run=(()=>{
       for(let f=2;f<=5;f++){const k=guardianKeyFor(f,S.seed,lk);seq.push(GUARDIANS[k].name);lk=k;}
       log('观测者：F2–F5 守卫序列 — <b>'+seq.join(' → ')+'</b>','sys');
     }
+    playEntrance();
   }
   function addStartPair(v){
     const ec=Board.emptyCells();
@@ -2952,30 +3025,99 @@ EL.btnStart.addEventListener('click',()=>{
   AudioSys.unlock();AudioSys.ui();
   const sv=SAVE.get();
   const tutDone=sv.tutorial.skipped||sv.tutorial.completed.length>=4;
-  EL.screenStart.classList.add('hidden');
-  if(!tutDone){
-    const nextId=sv.tutorial.completed.length+1;
-    Run.startRun(readSeed(),'chi',nextId);
-  }else{
-    if(!sv.unlocked[selectedChar])selectedChar='chi';
-    Run.startRun(readSeed(),selectedChar);
-  }
+  playTransition('shutter',()=>{
+    EL.screenStart.classList.add('hidden');
+    if(!tutDone){
+      const nextId=sv.tutorial.completed.length+1;
+      Run.startRun(readSeed(),'chi',nextId);
+    }else{
+      if(!sv.unlocked[selectedChar])selectedChar='chi';
+      Run.startRun(readSeed(),selectedChar);
+    }
+  });
 });
 EL.btnRestart.addEventListener('click',()=>{
   AudioSys.ui();
   const prev=Run.getState();
-  EL.screenDeath.classList.add('hidden');
-  Run.startRun((Date.now()%900000000)+1,prev?prev.charId:selectedChar);
+  playTransition('shutter',()=>{
+    EL.screenDeath.classList.add('hidden');
+    Run.startRun((Date.now()%900000000)+1,prev?prev.charId:selectedChar);
+  });
 });
 EL.btnSameSeed.addEventListener('click',()=>{
   AudioSys.ui();
   const S=Run.getState();
-  EL.screenDeath.classList.add('hidden');
-  Run.startRun(S?S.seed:1,S?S.charId:selectedChar);
+  playTransition('shutter',()=>{
+    EL.screenDeath.classList.add('hidden');
+    Run.startRun(S?S.seed:1,S?S.charId:selectedChar);
+  });
 });
 window.addEventListener('resize',()=>{
   FXS.resize();Ambient.resize();Board.relayout();
 });
+
+/* ================= SVG 转场系统 ================= */
+function buildTransitionSVG(type){
+  if(type==='chevron'){
+    let s='';
+    const n=5,w=100/n;
+    for(let i=0;i<n;i++){
+      const x=i*w,d=(i*0.06).toFixed(2);
+      s+='<polygon class="chv" style="animation-delay:'+d+'s" points="'+
+        x+',0 '+(x+w*0.62)+',0 '+(x+w)+',50 '+(x+w*0.62)+',100 '+x+',100 '+(x+w*0.38)+',50"/>';
+    }
+    return '<svg viewBox="0 0 100 100" preserveAspectRatio="none">'+s+'</svg>';
+  }
+  if(type==='scan'){
+    return '<svg viewBox="0 0 100 100" preserveAspectRatio="none">'+
+      '<rect class="scn" x="0" y="0" width="100" height="34"/></svg>';
+  }
+  /* shutter 默认：竖向面板交错闭合 */
+  let s='';
+  const n=6,w=100/n;
+  for(let i=0;i<n;i++){
+    const d=(i*0.055).toFixed(2);
+    s+='<rect class="sh" style="animation-delay:'+d+'s" x="'+(i*w-0.3)+'" y="0" width="'+(w+0.6)+'" height="100"/>';
+  }
+  return '<svg viewBox="0 0 100 100" preserveAspectRatio="none">'+s+'</svg>';
+}
+let trBusy=false;
+function playTransition(type,onMid){
+  const el=$('transition');
+  if(trBusy){if(onMid)onMid();return;}
+  trBusy=true;
+  el.innerHTML=buildTransitionSVG(type||'shutter');
+  el.classList.remove('hidden');
+  setTimeout(()=>{if(onMid)onMid();},300);
+  setTimeout(()=>{el.classList.add('hidden');el.innerHTML='';trBusy=false;},760);
+}
+/* ================= 开局入场动效 ================= */
+function playEntrance(){
+  const tops=[$('topbar'),$('board-zone')];
+  const bottoms=[$('col-left'),$('m-tabs'),$('col-right')];
+  tops.concat(bottoms).forEach(el=>{
+    if(!el)return;
+    el.classList.remove('anim-in-top','anim-in-bottom');
+  });
+  void document.body.offsetWidth;
+  tops.forEach((el,i)=>{
+    if(!el)return;
+    el.style.animationDelay=(i*0.08)+'s';
+    el.classList.add('anim-in-top');
+  });
+  bottoms.forEach((el,i)=>{
+    if(!el)return;
+    el.style.animationDelay=(0.14+i*0.07)+'s';
+    el.classList.add('anim-in-bottom');
+  });
+  setTimeout(()=>{
+    tops.concat(bottoms).forEach(el=>{
+      if(!el)return;
+      el.classList.remove('anim-in-top','anim-in-bottom');
+      el.style.animationDelay='';
+    });
+  },1000);
+}
 
 /* ================= 初始化 ================= */
 window.CF={
@@ -2989,11 +3131,17 @@ window.CF={
   giveSlag:n=>{SAVE.get().slag+=n;SAVE.save();},
   meta:()=>SAVE.get(),
   buy:k=>metaBuy(k),
-  startTutorial:n=>{EL.screenStart.classList.add('hidden');Run.startRun(1,'chi',n);},
+  startTutorial:n=>{playTransition('shutter',()=>{EL.screenStart.classList.add('hidden');Run.startRun(1,'chi',n);});},
 };
 FXS.resize();Ambient.resize();Ambient.init();
 Board.init();
 updateMenuStatus();
+/* 开屏动画完成后淡出 */
+setTimeout(()=>{
+  const sp=$('splash');
+  sp.classList.add('done');
+  setTimeout(()=>sp.remove(),600);
+},2100);
 /* 开始屏后的装饰棋盘 */
 [[0,2],[3,4],[5,8],[6,2],[9,16],[10,2],[12,4],[15,32]].forEach(p=>Board.addTile(p[0],p[1],{silent:true}));
 </script>
