@@ -28,6 +28,7 @@ body{
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 #board-zone{touch-action:none}
+#stage{touch-action:none}
 button{font-family:var(--mono); cursor:pointer; background:none; border:none; color:inherit}
 .hidden{display:none !important}
 .cham{clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
@@ -119,7 +120,16 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 @keyframes chipIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
 
 /* ============ 6. RELICS ============ */
-#relic-list{display:flex;flex-direction:column;gap:6px;max-height:208px;overflow-y:auto}
+#relic-list{display:flex;flex-wrap:wrap;gap:6px;max-height:208px;overflow-y:auto}
+.ric{width:40px;height:40px;padding:3px;background:#0c1013;border:1px solid var(--line);
+  cursor:pointer;transition:transform .12s;flex-shrink:0}
+.ric:hover{transform:scale(1.15)}
+.ric svg{width:100%;height:100%;display:block}
+#relic-tip{position:fixed;z-index:70;max-width:230px;background:rgba(10,14,18,.97);
+  border:1px solid var(--amber);padding:8px 11px;pointer-events:none;
+  display:flex;flex-direction:column;gap:4px}
+#relic-tip b{font-family:var(--disp);font-size:13px;letter-spacing:.06em}
+#relic-tip span{font-size:10px;line-height:1.55;color:var(--dim)}
 #relic-list::-webkit-scrollbar{width:4px}
 #relic-list::-webkit-scrollbar-thumb{background:var(--line2)}
 .relic-item{display:flex;gap:8px;align-items:baseline;border:1px solid var(--line);border-left:3px solid var(--dim);
@@ -464,13 +474,13 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
   /* 反应堆 → 紧凑状态条（常驻） */
   #col-left{order:2;gap:5px}
   #col-left .panel,#col-right .panel{display:none !important}
-  #reactor-panel{display:grid !important;grid-template-columns:1.5fr 1fr 1fr;gap:5px;padding:6px 8px}
+  #col-left #reactor-panel{display:grid !important;grid-template-columns:1.5fr 1fr 1fr;gap:5px;padding:6px 8px}
   #reactor-panel h3,#char-emblem{display:none}
   #hp-bar,#sh-bar,#en-bar{height:18px;margin:0}
   .bar .txt{font-size:8px;padding:0 5px}
   .bar .txt i{font-size:8px}
   /* 技能 → 紧凑行（常驻） */
-  #skill-panel{display:block !important;padding:6px 8px}
+  #col-left #skill-panel{display:block !important;padding:6px 8px}
   #skill-panel h3{display:none}
   .skill-row{gap:6px}
   .skill{padding:10px 8px}
@@ -550,6 +560,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-height:0}
 <div id="vignette"></div>
 <div id="hurt-flash"></div>
 <div id="menu-toast" class="hidden"></div>
+<div id="relic-tip" class="hidden"></div>
 
 <header id="topbar">
   <div class="logo">CORE<b>FORGE</b><span>// 熔核锻炉</span></div>
@@ -1619,7 +1630,7 @@ const Board=(()=>{
       }
     });
     let tx=0,ty=0,tt=0;
-    const zone=$('board-zone');
+    const zone=$('stage'); /* 整个舞台(棋盘+面板区)均为滑动操控区 */
     zone.addEventListener('touchstart',e=>{
       const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY;tt=Date.now();
     },{passive:true});
@@ -2567,6 +2578,94 @@ function updateBuffs(){
     EL.buffRow.appendChild(c);
   }
 }
+/* ================= 遗物像素图标（8×8 点阵 · 纯黑像素 · 流派描边） ================= */
+const RELIC_ICONS={
+  /* 热力 thermal */
+  chi0:['..####..','..#..#..','.######.','#....#..','#.##.#..','#.##.#..','#....#..','.######.'],
+  chi1:['#..##..#','.#....#.','..####..','##.##.##','##.##.##','..####..','.#....#.','#..##..#'],
+  chi2:['....###.','...####.','....##..','...##...','..##....','.##.....','##......','#.......'],
+  chi3:['...#....','.#.#.#..','..###...','#.###.#.','..###...','.#.#.#..','...#....','........'],
+  t1:['.######.','#......#','#.####.#','#.#..#.#','#.#..#.#','#.####.#','#......#','.######.'],
+  t2:['##......','.##.....','..##....','...##...','..##....','.##.....','##......','........'],
+  t3:['...#....','..###...','..###...','.#####..','.#####..','#####...','#####...','.###....'],
+  t4:['.#..#...','##.###..','.####...','######..','#....#..','#.##.#..','#....#..','######..'],
+  t5:['#.#.#.#.','.#.#.#.#','#.#.#.#.','.#.#.#.#','#.#.#.#.','.#.#.#.#','#.#.#.#.','.#.#.#.#'],
+  /* 防护 aegis */
+  ning0:['...##...','..####..','.######.','########','########','.######.','..####..','...##...'],
+  ning1:['...#....','..###...','.#.#.#..','########','.#.#.#..','..###...','...#....','........'],
+  ning2:['.######.','########','########','########','.######.','..####..','...##...','...##...'],
+  ning3:['........','...##...','..####..','.######.','########','########','........','........'],
+  a1:['..####..','.######.','########','########','########','.######.','..####..','........'],
+  a2:['#.#..#.#','.#....#.','#..##..#','...##...','...##...','#..##..#','.#....#.','#.#..#.#'],
+  a3:['#.#.#.#.','#.#.#.#.','#.#.#.#.','#.#.#.#.','#.#.#.#.','#.#.#.#.','########','........'],
+  a4:['########','#..#..#.','########','.#..#..#','########','#..#..#.','########','........'],
+  a5:['...##...','...##...','.######.','.######.','.######.','...##...','...##...','........'],
+  pan0:['........','.##.##..','########','########','.######.','..####..','...##...','........'],
+  pan1:['...#....','..##....','..##....','.###....','.###....','####....','####....','.##.....'],
+  pan2:['..####..','.#....#.','#......#','#......#','#......#','#......#','.#....#.','..####..'],
+  pan3:['...##...','..####..','..####..','########','########','..####..','..####..','..####..'],
+  /* 涌流 surge */
+  rui0:['....###.','...###..','..###...','.#####..','..###...','.###....','###.....','#.......'],
+  rui1:['#..#..#.','#..#..#.','########','#..#..#.','#..#..#.','########','#..#..#.','#..#..#.'],
+  rui2:['........','..#.....','.###....','#.#.#...','...#.#..','....###.','.....#..','........'],
+  rui3:['...##...','..####..','...##...','...##...','..####..','.######.','########','........'],
+  s1:['.##..##.','.##..##.','.##..##.','.##..##.','.##..##.','.##..##.','.##..##.','.##..##.'],
+  s2:['..#..#..','..####..','.#.##.#.','########','########','.#.##.#.','..####..','..#..#..'],
+  s3:['..####..','.#....#.','#..##..#','#..##..#','#..##..#','#..##..#','.#....#.','..####..'],
+  s4:['..###...','.#...#..','#.....#','#..#..#','#..#..#','#.....#','.#...#..','..###...'],
+  s5:['...##...','.######.','#....#.#','#.####.#','#....#.#','#.####.#','#....#.#','.######.'],
+  /* 熵变 entropy */
+  xu0:['.######.','#....#.#','#.##.#.#','#.##.#.#','#....#.#','.######.','........','........'],
+  xu1:['########','#......#','#..##..#','#...#..#','#..#...#','#..#...#','#......#','########'],
+  xu2:['#...#..#','..#...#.','#....#..','...#...#','.#....#.','..#.#...','#....#.#','.#..#...'],
+  xu3:['........','..####..','.#....#.','#.####.#','#.####.#','.#....#.','..####..','........'],
+  e1:['..#..#..','.#.##.#.','#..##..#','...##...','...##...','#..##..#','.#.##.#.','..#..#..'],
+  e2:['.######.','#......#','#..##..#','#..##..#','#..##..#','#..##..#','#......#','########'],
+  e3:['...##...','..#..#..','.#....#.','#......#','.#....#.','..#..#..','...##...','........'],
+  e4:['..#..#..','.#.#.#..','..###...','..###...','.#.#.#..','#..#..#.','...#....','..#.#...'],
+  e5:['########','#......#','#.#..#.#','#......#','#......#','#.#..#.#','#......#','########'],
+};
+function relicIconSVG(r){
+  const pat=RELIC_ICONS[r.id];
+  if(!pat)return '';
+  const col=SCHOOLS[r.school].color;
+  let px='';
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+    if(pat[y][x]==='#')px+='<rect x="'+(x*3+2)+'" y="'+(y*3+2)+'" width="3" height="3"/>';
+  }
+  return '<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">'+
+    '<rect x="1" y="1" width="26" height="26" fill="#dfe6ea" stroke="'+col+'" stroke-width="2"/>'+
+    '<g fill="#0a0c0e">'+px+'</g></svg>';
+}
+let relicTipTimer=null;
+function showRelicTip(el,x,y){
+  const tip=$('relic-tip');
+  const col=SCHOOLS[el.dataset.school].color;
+  tip.innerHTML='<b style="color:'+col+'">'+el.dataset.name+'</b><span>'+el.dataset.desc+'</span>';
+  tip.style.borderColor=col;
+  tip.classList.remove('hidden');
+  const w=tip.offsetWidth,h=tip.offsetHeight;
+  let px=x+14,py=y-h-14;
+  if(px+w>window.innerWidth-8)px=window.innerWidth-w-8;
+  if(px<8)px=8;
+  if(py<8)py=y+18;
+  tip.style.left=px+'px';tip.style.top=py+'px';
+}
+function hideRelicTip(){
+  $('relic-tip').classList.add('hidden');
+  if(relicTipTimer){clearTimeout(relicTipTimer);relicTipTimer=null;}
+}
+function attachRelicTip(el){
+  el.addEventListener('mouseenter',e=>showRelicTip(el,e.clientX,e.clientY));
+  el.addEventListener('mousemove',e=>showRelicTip(el,e.clientX,e.clientY));
+  el.addEventListener('mouseleave',hideRelicTip);
+  el.addEventListener('touchstart',e=>{
+    const t=e.changedTouches[0];
+    relicTipTimer=setTimeout(()=>showRelicTip(el,t.clientX,t.clientY),350);
+  },{passive:true});
+  el.addEventListener('touchend',hideRelicTip);
+  el.addEventListener('touchmove',hideRelicTip);
+}
 function updateRelicUI(){
   const S=Run.getState();if(!S)return;
   EL.relicCount.textContent=S.relics.length;
@@ -2576,10 +2675,14 @@ function updateRelicUI(){
   }
   for(const id of S.relics){
     const r=RELICS.find(x=>x.id===id);
-    const d=document.createElement('div');
-    d.className='relic-item s-'+r.school;
-    d.innerHTML='<span class="rn">'+r.name+'</span><span class="rd">'+r.desc+'</span>';
-    EL.relicList.appendChild(d);
+    const b=document.createElement('button');
+    b.className='ric s-'+r.school;
+    b.innerHTML=relicIconSVG(r);
+    b.dataset.name=r.name;
+    b.dataset.desc=r.desc;
+    b.dataset.school=r.school;
+    attachRelicTip(b);
+    EL.relicList.appendChild(b);
   }
   EL.affRow.innerHTML='';
   for(const sc of Object.keys(SCHOOLS)){
